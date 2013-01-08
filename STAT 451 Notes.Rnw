@@ -1,0 +1,122 @@
+\documentclass[12pt,letterpaper,oneside]{article}
+\newcommand{\university}{Brigham Young University}
+\newcommand{\classCode}{STAT 451}
+\newcommand{\className}{Applied Bayesian Statistics}
+\newcommand{\documentName}{Notes}
+\newcommand{\dateTaken}{January 7, 2013}
+\newcommand{\semester}{Winter 2013}
+\newcommand{\teacher}{Dr. Gil Fellingham}
+\newcommand{\docVersion}{00000}
+\newcommand{\authorName}{\href{mailto:adam@acjackman.com}{Adam Jackman}}
+
+\input{./Styles/code.tex}
+\input{./Styles/pageStyle.tex}
+
+\input{./Styles/mathCommands.tex}
+
+<<KnitrSettings, cache=FALSE, include=FALSE>>=
+# Adam Jackman
+# December 3, 2012
+opts_chunk$set(fig.path='figure/graphic-', cache.path='cache/graphic-', fig.align='center', fig.width=5, fig.height=5, fig.show='hold', cache=TRUE, par=TRUE, size="scriptsize")
+options(width=80)
+knit_hooks$set(crop = hook_pdfcrop)
+# render_listings() # Use listings instead of regular output
+@
+
+\begin{document}
+\input{./Styles/title.tex}
+\renewcommand{\dateTaken}{January 8, 2013}
+\daysep
+
+\section{Class Introduction} % (fold)
+\label{sec:class_introduction}
+Office Hours Monday
+
+Keep a copy of the code
+
+Preliminary assignment email now.
+% section class_introduction (end)
+
+\section{Bayesian Methodology} % (fold)
+\label{sec:bayesian_methodology}
+Parameterize state of knowledge
+
+Estimate parameters
+
+\begin{align*}
+    f(\underline{\theta}|\underline{x})=\frac{L(\underline{x}|\underline{\theta})\prod(\underline{\theta})}{\iint_{\underline{\theta}} L(\underline{x}|\underline{\theta})\prod(\underline{\theta}) \dd \underline{\theta}} \propto L(\underline{x}| \underline{\theta})\prod(\underline{\theta})
+\end{align*}
+\subsection{Metropolis Sampler} % (fold)
+\label{sub:metropolis_sampler}
+
+\begin{align*}
+    \pi\left[\frac{1}{\Gamma(\alpha)\beta^{\alpha}}x^{\alpha-1} \exp\left( -\frac{x}{\beta}\right)\right]+ (\pi-1)\left[\frac{1}{\Gamma(\alpha)\beta^{\alpha}}x^{\alpha-1} \exp\left( -\frac{x}{\beta}\right)\right]\\
+    \frac{1}{4}\left[\frac{1}{\Gamma(2)3^{2}}x^{2-1} \exp\left( -\frac{x}{3}\right)\right] +
+    \frac{3}{4}\left[\frac{1}{\Gamma(4)3^{4}}x^{4-1} \exp\left( -\frac{x}{3}\right)\right]\\
+    k=4\Gamma(4) 3^3
+\end{align*}
+\begin{align*}
+    g(x)=k \cdot f(x)= 18 x \exp\left(-\frac{x}{3}\right)+ x^3\exp\left(-\frac{x}{3}\right)
+\end{align*}
+\subsubsection{Metropolis Sampler Steps} % (fold)
+\label{ssub:metropolis_sampler_steps}
+\begin{itemize}
+    \item Initial $x=x_0$
+    \item for $i=1$ to $n$
+    \begin{itemize}
+        \item generate candidate $c$
+        \item $\displaystyle{\frac{g(c)}{g(x_{i-1}} = r}$
+        \item let $x_i=c$ with $\prob=\min(1,r)$
+    \end{itemize}
+\end{itemize}
+% subsubsection metropolis_sampler_steps (end)
+\subsubsection{Metropolis Code} % (fold)
+\label{ssub:metropolis_code}
+<<metropolisSampler,cache=TRUE>>=
+# Define g function
+g <- function(x){
+18 * x * exp(-x/3) + x^3 * exp(-x/3)
+}
+
+# Write Sampler
+out <- NULL
+out[1] <- 5
+candidate.sigma <- 20
+counter <- 0
+samples <- 10^4
+for (i in 2:samples) {
+    out[i] <- out[i - 1]
+    candidate <- rnorm(1, out[i-1], candidate.sigma)
+    if (candidate > 0){
+        r <- g(candidate)/g(out[i-1])
+        if (r > runif(1,0,1)){
+            out[i] <- candidate
+            counter <- counter +1
+        }
+    }
+}
+message(counter/samples) # should be about 24-40
+plot(out, type='l', main="Trace Plot")
+@
+Trace Plot looks good
+
+<<MetropolisSamplerPosteriorPlot>>=
+xx <- seq(0,50,length=100000)
+k <- 4*gamma(4)*3^3
+# Plot the exact distribution
+plot(xx,g(xx)/k, lwd=2, col='blue')
+# curve(.25*dgamma(x, shape=2, scale=3)+.75*dgamma(x, shape=4, scale=3), add=TRUE, col='blue')
+# Both of these should produce the same line
+
+lines(density(out),lwd=2)
+
+# Exact Mean
+.25*(2*3)+.75*(4*3)
+
+# Approximate Mean
+mean(out)
+@
+% subsubsection metropolis_code (end)
+% subsection metropolis_sampler (end)
+% section bayesian_methodology (end)
+\end{document}
