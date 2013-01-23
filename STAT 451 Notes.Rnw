@@ -17,10 +17,12 @@
 <<KnitrSettings, cache=FALSE, include=FALSE>>=
 # Adam Jackman
 # December 3, 2012
-opts_chunk$set(fig.path='figure/graphic-', cache.path='cache/graphic-', fig.align='center', fig.width=5, fig.height=5, fig.show='hold', cache=TRUE, par=TRUE, size="scriptsize")
+opts_chunk$set(fig.path='figure/graphic-', cache.path='cache/graphic-', fig.align='center', fig.width=5, fig.height=5, fig.show='hold', out.width='.4\\textwidth', cache=TRUE, par=TRUE, size="scriptsize")
 options(width=80)
 knit_hooks$set(crop = hook_pdfcrop)
 # render_listings() # Use listings instead of regular output
+
+library(R2jags)
 @
 
 \begin{document}
@@ -119,4 +121,280 @@ mean(out)
 % subsubsection metropolis_code (end)
 % subsection metropolis_sampler (end)
 % section bayesian_methodology (end)
+\renewcommand{\dateTaken}{January 10, 2013}
+\daysep
+
+Paul Sabin --- Stat 451 TA\\
+Tuesday 2:30-4:00\\
+Friday: 9:30-11:00\\
+Office: 233\\
+Email:\href{mailto:r.paul.sabin@gmail.com}{r.paul.sabin@gmail.com}
+
+<<eval=FALSE>>=
+# For Winbugs
+install.packages("ARM", "R2WinBUGS")
+
+# For jags
+install.packages("R2jags")
+@
+
+\section{Two Sample $t$ test} % (fold)
+\label{sec:two_sample_t_test}
+
+\begin{align*}
+y \sim \mathcal{N}(\mu, \sigma^2)\quad i=1,2\\
+f(\mu_1)=\mathcal{N}(\mu=0, \sigma^2=1000)
+f(\sigma^2)=\text{Unif}(0, 5000)
+\end{align*}
+% section two_sample_t_test (end)
+
+PROC MCMC two group $t$ test
+\begin{lstlisting}[language=SAS]
+data examp2;
+infile dataset;
+input tmt response;
+run;
+
+/*
+nmc: Number of Marcov Chains
+nbi: Number Burn in
+
+dic: information criteria
+*/
+proc mcmc data=examp2 outpost=post2 seed=1234 nmc=100000 nbi=5000
+                      statistics(alpha=.05)=(summary interval) thin=10
+                      moniter=( parms mudif varratio) propcov=quannew
+                      diagnostics=(all) dic ;
+array mu[2] mu1-mu2;
+arra sig2[2] sig21-sig22;
+prams: mu: sig2:;
+prior mu: ~ normal(0, sd=10000);
+prior sig21 ~ unif(9, 5000); /*  gamma(shape=30, scale=50) */
+prior sig22 ~ unif(9, 5000);
+mudif = mu1 - mu2;
+varratio = sig21/sig22;
+mm = mu[tmt];
+vv = sig2[tmt];
+model response ~ normal(mm, var=vv);
+run;
+
+proc export data=post2 outfile='twogroups.csv' dbms=csv replace;
+run;
+\end{lstlisting}
+
+\begin{description}
+    \item[HPD --- Highest Posterior Density] the smallest interval
+\end{description}
+
+Fischer variance problem --- a two sample $t$ test with unequal variances
+
+
+% <<engine='SAS'>>=
+% data foo;
+% input a b c;
+% datalines;
+% 1 2 3
+% 4 5 6
+% 7 8 9
+% ;
+% run;
+% @
+
+Check the posterior autocorolations
+
+\renewcommand{\dateTaken}{January 15, 2013}
+\daysep
+<<eval=FALSE>>=
+    library(rjags)
+    library(R2jags)
+@
+JAGS uses precisions, not variances. Precisions are $\frac{1}{\sigma^2}$
+
+\lstinputlisting[language=R]{code/TwoSampleJAGS.R}
+
+
+\renewcommand{\dateTaken}{January 17, 2013}
+\daysep
+
+You need to think about priors
+
+\section{Diagnostics} % (fold)
+\label{sec:diagnostics}
+<<>>=
+library(R2jags)
+mdl <- "
+    model {
+        for (i in 1:33) {
+            y[i] ~ dnorm(mu[tmt[i]], prec[tmt[i]])
+        }
+
+        for (i in 1:2) {
+            mu[i] ~ dnorm(0,0.000001)
+            vr[i] ~ dunif(0,5000)
+            prec[i] <- 1/vr[i]
+        }
+    }
+"
+groups <- read.table("data/01twogroups.dat", col.names=c("tmt", "y"))
+writeLines(mdl, "code/twogroups.jags")
+tmt <- groups$tmt
+y <- groups$y
+# Data to go into jags
+data.jags <- c('tmt','y')
+# what parameters to keep track of
+parms <- c('mu','vr')
+# Initial Values
+innts <- function() {list('mu' = rnorm(2,125,5), 'vr' = runif(2,0,5000))}
+twogroups.sim <- jags(data=data.jags, parameters.to.save=parms, inits=innts, model.file="code/twogroups.jags",
+    n.iter=6000, n.burnin=1000, n.chains=1, n.thin=1)
+
+twogroups.sim
+
+sims <- as.mcmc(twogroups.sim)
+plot(sims)
+
+# plot(sims[,2], type='l')
+@
+
+First diagnostic: Look at your trace plot
+
+Second diagnostic: look at auto corilation
+<<>>=
+autocorr(sims)
+autocorr.plot(sims)
+@
+
+A good autocorrelation plot shows the first bar being tall, but the rest being relatively small.
+
+Fourth diagnostic: Effective Sample size
+<<>>=
+effectiveSize(sims)
+@
+these should be relatively close to the actual sample size
+
+fifth diagnostic: Raftery Lewis Diagnostic
+<<>>=
+raftery.diag(sims)
+@
+Check if you are within .005 (in the tails) with high probability
+
+Dependence Factor should be less than 5
+
+These five are the most commonly used, but there are others
+<<>>=
+geweke.diag(sims)
+@
+Tests for drift in the samples. does something like a $t$ test on the first 10\% and the last 50\% of the chain.
+
+Heild
+<<>>=
+heidel.diag(sims)
+@
+test of stationarity, or convergence
+
+both the stationarity and halfwidth mean test should pass.
+
+
+Gelmen needs chains started at different points
+% section diagnostics (end)
+\renewcommand{\dateTaken}{January 22, 2013}
+\daysep
+\section{Posterior Predictives} % (fold)
+\label{sec:posterior_sredictives}
+Liklihood $g_{i1}\sim \mathcal{N}(\mu_1, \sigma^2_1$, $g_{i2}\sim \mathcal{N}(\mu_2, \sigma^2_2$
+
+Get a new y by plugging the sampled values of the parameters into a random sampler for the likelihood
+\begin{lstlisting}
+ynew_1 <- rnorm(1,mu1[1],sigma1[1])
+\end{lstlisting}
+
+\begin{tabular}{ccccc}
+ $\mu_1$ & $\sigma^2_1$ & $\mu_2$ & $\sigma^2_2$ & $y_{\text{new}1}$\\
+ \vdots & \vdots & \vdots & \vdots & \vdots
+\end{tabular}
+
+<<>>=
+ratios <- read.table("../Homework/01/monkeyratio.dat")[,1]
+library(R2jags)
+N <- length(ratios)
+
+mdl <- "
+    model {
+        for (i in 1:N) {
+            ratios[i] ~ dbeta(alpha, beta)
+        }
+
+        alpha ~ dgamma(5, .025)
+        beta ~ dgamma(5, .025)
+    }
+"
+writeLines(mdl, "code/hw1.jags")
+
+jags.data <- c("ratios", "N")
+jags.params <- c("alpha", "beta")
+jags.inits <- function() {
+    list('alpha' <- rgamma(5,.025), 'beta' <- rgamma(5,.025))
+}
+set.seed(5487)
+
+ratios.sim <- jags(data=jags.data,
+                   parameters.to.save=jags.params,
+                   # inits=jags.inits,
+                   model.file="code/hw1.jags",
+                   n.iter=6000, n.burnin=1000, n.chains=1, n.thin=1)
+
+sims <- as.mcmc(ratios.sim)
+
+# autocorr.plot(sims)
+alpha <- sims[,1]
+beta <- sims[,2]
+ynew <- rbeta(10000,alpha,beta)
+
+# Plot of the density of the mean and the posteior predicitve
+plot(density(alpha/(alpha+beta)), xlim=c(.6,.9))
+lines(density(ynew), col='blue') # Plot of the posterior predicive
+@
+
+ We don't make up data we get it from ``Pedagogically flexible data acquisition.''---Dr Tolly.
+
+
+You can use other priors, they just may not be as easy for example:
+<<include=FALSE>>=
+mdl <- '
+model {
+    for (i in 1:5) {
+        y[i] ~ dnorm(mu, prec)
+    }
+
+    mu ~ dunif(0,1)
+    s2 ~ dunif(0,.05)
+    prec <- 1/s2
+}
+'
+writeLines(mdl,"code/hw1norm.jags")
+y <- ratios
+jags.data <- 'y'
+jags.params <- c('mu','s2')
+hw1norm.sim <- jags(data=jags.data,
+                   parameters.to.save=jags.params,
+                   model.file="code/hw1norm.jags",
+                   n.iter=6000, n.burnin=1000, n.chains=1, n.thin=1)
+sims <- as.mcmc(hw1norm.sim)
+plot()
+
+@
+% section posterior_predictives (end)
+\section{Linear Regression} % (fold)
+\label{sec:linear_regression}
+Likelihood \[ y_{i} ~ \mathcal{N}(\mu_{i}, \sigma^2)\]
+
+The mean is different for every data point, but the variance is constant.
+
+\begin{align*}
+    \mu_1 \leftarrow \beta_{0} + \beta_{1} x\\
+    \beta_{0} \sim \mathcal{N}(,\tau=.001)\\
+    \beta_{1} \sim \mathcal{N}(\mu=0,\tau=.001)\\
+    \sigma^{2} \sim \\
+\end{align*}
+% section linear_regression (end)
 \end{document}
