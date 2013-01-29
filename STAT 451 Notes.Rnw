@@ -396,5 +396,112 @@ The mean is different for every data point, but the variance is constant.
     \beta_{1} \sim \mathcal{N}(\mu=0,\tau=.001)\\
     \sigma^{2} \sim \\
 \end{align*}
+\renewcommand{\dateTaken}{January 24, 2013}
+\daysep
+
+<<>>=
+jags.modelfile <- 'code/linreg.jags'
+mdl <- '
+    model {
+        for (i in 1:N) {
+            y[i] ~ dnorm(mu[i], prec)
+            mu[i] <- beta_0 + beta_1 * x[i]
+        }
+
+        beta_0 ~ dnorm(0, .00001)
+        beta_1 ~ dnorm(0, .001)
+        sigma2 ~ dgamma(1.1, .5)
+        prec <- 1/sigma2
+    }
+'
+writeLines(mdl, 'code/linreg.jags')
+
+
+linregdata <- read.table("data/02linreg.dat", col.names=c('lotsize', 'manhours'))
+N <- nrow(linregdata)
+y <- linregdata[,2]
+x <- linregdata[,1]
+jags.data <- c('y', 'x', 'N')
+jags.params <- c('beta_0', 'beta_1', 'sigma2')
+
+
+set.seed(5487)
+linreg.sim <- jags(data=jags.data,
+                   parameters.to.save=jags.params,
+                   model.file='code/linreg.jags',
+                   n.iter=10000, n.burnin=5000, n.chains=1, n.thin=1)
+linreg.sim
+@
+
+Let's check for convergence
+<<>>=
+sims <- as.mcmc(linreg.sim)
+# Trace Plots
+plot(sims)
+# Autocorrelation plots
+autocorr.plot(sims, ask=FALSE)
+effectiveSize(sims)
+raftery.diag(sims)
+@
+
+Here's the frequentest method for an ANOVA
+<<>>=
+fit.1 <- lm(y~x)
+anova(fit.1)
+@
+
+to check the value of the slope
+<<>>=
+beta0 <- sims[,1]
+beta1 <- sims[,2]
+sigma2 <- sims[,4]
+
+# Probability slope is greater than 0
+mean(beta1>0)
+
+# Plot the density of the slope of the line
+plot(density(beta1))
+@
+
+Plot of regression
+<<>>=
+plot(x,y, pch=20)
+abline(mean(beta0),mean(beta1))
+xx <- seq(min(x), max(x), by=0.01)
+
+ans <- beta0+outer(beta1,xx,'*')
+lines(xx,apply(ans,2,quantile,.025), col='blue')
+lines(xx,apply(ans,2,quantile,.975), col='blue')
+
+# generate a new data set with the first set of
+points(xx, beta0[1]+beta1[1]*xx+rnorm(length(xx),0,sqrt(sigma2[1])), pch=20)
+
+@
+
+Homework Plot the prediction interval from the problem in class
+
+generate a normal using  ans each ans and sigma
 % section linear_regression (end)
+\renewcommand{\dateTaken}{January 29, 2013}
+\daysep
+\section{Multiple Linear Regression} % (fold)
+\label{sec:multiple_linear_regression}
+\lstinputlisting[language=SAS]{code/MultipleRegression.sas}
+Raftery-lewis diagnostics should be less than 5.
+
+Let the variance increase proportionaly with the $x$s
+
+<<>>=
+vo2 <- read.table("data/03vo2.dat", skip=1, col.names=c("ID","Gender","Age1","BMI","MPH","HR","RPE","MaxVO2ML"))
+plot(vo2$MPH, vo2$MaxVO2ML)
+plot(vo2$BMI, vo2$MaxVO2ML)
+plot(vo2$Gender, vo2$MaxVO2ML)
+@
+
+
+DIC Deviance inormation criteria (calculated in formula~\ref{eq:deviance})
+\begin{align} \label{eq:deviance}
+    \text{deviance} = -2\log(\mathcal{L})
+\end{align}
+% section multiple_linear_regression (end)
 \end{document}
