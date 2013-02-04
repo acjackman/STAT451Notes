@@ -292,7 +292,7 @@ heidel.diag(sims)
 @
 test of stationarity, or convergence
 
-both the stationarity and halfwidth mean test should pass.
+both the stationarity and half width mean test should pass.
 
 
 Gelmen needs chains started at different points
@@ -350,9 +350,9 @@ alpha <- sims[,1]
 beta <- sims[,2]
 ynew <- rbeta(10000,alpha,beta)
 
-# Plot of the density of the mean and the posteior predicitve
+# Plot of the density of the mean and the posterior predictive
 plot(density(alpha/(alpha+beta)), xlim=c(.6,.9))
-lines(density(ynew), col='blue') # Plot of the posterior predicive
+lines(density(ynew), col='blue') # Plot of the posterior predictive
 @
 
  We don't make up data we get it from ``Pedagogically flexible data acquisition.''---Dr Tolly.
@@ -499,9 +499,137 @@ plot(vo2$Gender, vo2$MaxVO2ML)
 @
 
 
-DIC Deviance inormation criteria (calculated in formula~\ref{eq:deviance})
+DIC Deviance information criteria (calculated in formula~\ref{eq:deviance})
 \begin{align} \label{eq:deviance}
     \text{deviance} = -2\log(\mathcal{L})
 \end{align}
+
+\renewcommand{\dateTaken}{January 31, 2013}
+\daysep
+<<>>=
+# Using the VO2 Data
+N <- nrow(vo2)
+mdl <- '
+model {
+    for( i in 1:N){
+        y[i] ~ dnorm(mu[i], prec)
+        mu[i] <- b_0 +
+                 b_gen*gender[i] +
+                 b_bmi*bmi[i] +
+                 b_mph*mph[i] +
+                 b_hr*hr[i] +
+                 b_rpe*rpe[i] +
+                 # b_gen_bmi*gen_bmi[i] +
+                 # b_gen_mph*gen_mph[i] +
+                 # b_gen_hr*gen_hr[i] +
+                 # b_gen_rpe*gen_rpe[i] +
+                 # b_bmi_mph*bmi_mph[i] +
+                 # b_bmi_hr*bmi_hr[i] +
+                 # b_bmi_rpe*bmi_rpe[i] +
+                 b_mph_hr*mph_hr[i] # +
+                 # b_mph_rpe*mph_rpe[i] +
+                 # b_hr_rpe*hr_rpe[i]
+    }
+
+    b_0   ~ dnorm(0, .00001);
+    b_gen ~ dnorm(0, .001);
+    b_bmi ~ dnorm(0, .001);
+    b_mph ~ dnorm(0, .001);
+    b_hr  ~ dnorm(0, .001);
+    b_rpe ~ dnorm(0, .001);
+
+    # b_gen_bmi ~ dnorm(0, .001);
+    # b_gen_mph ~ dnorm(0, .001);
+    # b_gen_hr  ~ dnorm(0, .001);
+    # b_gen_rpe ~ dnorm(0, .001);
+    # b_bmi_mph ~ dnorm(0, .001);
+    # b_bmi_hr  ~ dnorm(0, .001);
+    # b_bmi_rpe ~ dnorm(0, .001);
+    b_mph_hr  ~ dnorm(0, .001);
+    # b_mph_rpe ~ dnorm(0, .001);
+    # b_hr_rpe  ~ dnorm(0, .001);
+
+    vr ~ dgamma(2, .05)
+    prec <- 1/vr
+}
+'
+writeLines(mdl, "code/multipleRegression.jags")
+
+y <- vo2[,8]
+gender <- vo2[,2]
+bmi <- vo2[,4]
+hr <- vo2[,6]
+mph <- vo2[,5]
+rpe <- vo2[,7]
+
+# gen_bmi <- gender*bmi
+# gen_hr <- gender*hr
+# gen_mph <- gender*mph
+# gen_rpe <- gender*rpe
+# bmi_mph <- bmi*mph
+# bmi_hr <- bmi*hr
+# bmi_rpe <- bmi*rpe
+mph_hr <- mph*hr
+# mph_rpe <- mph*rpe
+# hr_rpe <- hr*rpe
+
+jags.data <- c(
+"N",
+"y",
+"gender",
+"bmi",
+"hr",
+"mph",
+"rpe",
+# "gen_bmi",
+# "gen_hr",
+# "gen_mph",
+# "gen_rpe",
+# "bmi_mph",
+# "bmi_hr" #,
+# "bmi_rpe",
+"mph_hr" #,
+# "mph_rpe",
+# "hr_rpe",
+)
+jags.params <- c(
+"b_0",
+"b_gen",
+"b_bmi",
+"b_hr",
+"b_mph",
+"b_rpe",
+# "b_gen_bmi",
+# "b_gen_hr",
+# "b_gen_mph",
+# "b_gen_rpe",
+# "b_bmi_mph",
+# "b_bmi_hr",
+# "b_bmi_rpe",
+"b_mph_hr",
+# "b_mph_rpe",
+"vr"
+)
+
+set.seed(1234)
+multr.sim <- jags(data=jags.data,
+                   parameters.to.save=jags.params,
+                   model.file="code/multipleRegression.jags",
+                   n.iter=10000, n.burnin=5000, n.chains=1, n.thin=1)
+@
+
+\begin{tabular}{cc}
+Full & 756.4\\
+-hr & 764.4\\
+-rpe & 759.2\\
++ all two way interactions & 766.7\\
+\end{tabular}
+
+\begin{align*}
+    IC= -2\log(\mathcal{L}) + \text{penalty}(\text{parameters})\\
+    \text{Deviance} = -2 \log(\mathcal{L})\\
+    DIC = -2\log(\mathcal{L}) + pD\\
+    pD = \frac{\text{VAR}(\text{deviance})}{2}
+\end{align*}
 % section multiple_linear_regression (end)
 \end{document}
