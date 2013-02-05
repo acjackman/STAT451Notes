@@ -632,4 +632,101 @@ Full & 756.4\\
     pD = \frac{\text{VAR}(\text{deviance})}{2}
 \end{align*}
 % section multiple_linear_regression (end)
+\section{ANOVA} % (fold)
+\label{sec:anova}
+Cell means model of ANOVA
+
+
+\begin{tabular}{c|c|c|c}
+Treatement 1& Treatement 2 & Treatement 3 & Treatement 4\\
+\hline
+$y_{11}$ & $y_{21}$ & $y_{31}$ & $y_{41}$ \\
+$y_{12}$ & $y_{22}$ & $y_{32}$ & $y_{42}$ \\
+$y_{13}$ & $y_{23}$ & $y_{33}$ & $y_{43}$ \\
+$y_{14}$ & $y_{24}$ & $y_{34}$ & $y_{44}$ \\
+\end{tabular}
+
+so given this data we say that
+$y_{1}\sim \mathrm{N}(\mu,\sigma^{2})$
+
+<<tidy=FALSE>>=
+anova <- read.table("data/04anova.dat" ,col.names=c("tmt","response","tmt1"))
+N <- nrow(anova)
+mdl <- 'model {
+    # Likelihood
+    for (i in 1:N){
+        response[i] ~ dnorm(mu[tmt[i]], prec)
+    }
+
+    # Create priors for each treatment
+    for(i in 1:4){
+        mu[i] ~ dnorm(15,.0001)
+    }
+    prec <- 1/vv
+    vv ~ dgamma(1.1,.1)
+}
+'
+writeLines(mdl, "code/ANOVAmodel.jags")
+response <- anova$response
+tmt <- anova$tmt
+@
+<<>>=
+jags.data <- c("N", "response", 'tmt')
+jags.params <- c('mu', 'vv')
+anova.sim <- jags(data=jags.data,
+                  parameters.to.save=jags.params,
+                  model.file="code/ANOVAmodel.jags",
+                  n.iter=12000,
+                  n.chains=1,
+                  n.thin=1
+                  )
+sims <- as.mcmc(anova.sim)
+plot(sims, ask=FALSE)
+autocorr.plot(sims)
+raftery.diag(sims)
+effectiveSize(sims)
+@
+
+<<tidy=FALSE>>=
+mdl <- 'model {
+    # Likelihood
+    for (i in 1:N){
+        response[i] ~ dnorm(mu[tmt[i]], prec[tmt[i]])
+    }
+
+    # Create priors for each treatment
+    for(i in 1:4){
+        mu[i] ~ dnorm(15,.0001)
+        prec[i] <- 1/vv[i]
+        vv[i] ~ dgamma(1.1,.1)
+    }
+}
+'
+writeLines(mdl, "code/ANOVAmodelNCvariance.jags")
+@
+<<>>=
+si
+@
+
+Devience is the -2*log likelihood
+
+\subsection{Compare Means} % (fold)
+\label{sub:compare_means}
+We don't care about multiple test becasue we are not under the constraint of a null hypothisis
+<<>>=
+diff12 <- sims[,2] - sims[,3]
+mean( dif12 > 0 )
+dif13 <- sims[,2] - sims[,4]
+dif14 <- sims[,2] - sims[,5]
+dif23 <- sims[,3] - sims[,4]
+dif24 <- sims[,3] - sims[,5]
+dif34 <- sims[,4] - sims[,5]
+mean(dif13>0)
+mean(dif14>0)
+mean(dif23>0)
+mean(dif24>0)
+mean(dif34>0)
+@
+% subsection compare_means (end)
+% section anova (end)
 \end{document}
