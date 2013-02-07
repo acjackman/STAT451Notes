@@ -728,5 +728,163 @@ mean(dif24>0)
 mean(dif34>0)
 @
 % subsection compare_means (end)
+
+Two by three factorial design.
+<<>>=
+twoway <- read.table("data/05twoway.dat", col.names=c("block","seedType","inoculate","yield"))
+@
+Using cell means method
+
+Table should be rotated
+\begin{tabular}{c|cc|c}
+ & a & b & \\
+ \hline
+dea & $\mu_{11}$ & $\mu_{12}$ & $\mu_{1\cdot}$\\
+con & $\mu_{21}$ & $\mu_{22}$ & $\mu_{2\cdot}$\\
+liv & $\mu_{31}$ & $\mu_{22}$ & $\mu_{3\cdot}$\\
+\hline
+    & $\mu_{\cdot 1}$ & $\mu_{\cdot 2}$ & \\
+\end{tabular}
+
+Degrees of freedom is 5, one for type, two for inoculate, and two for interaction
+
+<<tidy=FALSE>>=
+y <- as.numeric(twoway$seedType)
+
+mdl <- '
+model {
+    for (i in 1:24) {
+        yield[i] ~ dnorm(mu[ncult[i],ninoc[i]], 1/vv)
+    }
+
+    for (i in 1:2) {
+        for (j in 1:3) {
+            mu[i,j] ~ dnorm(0, .000001)
+        }
+    }
+
+    vv ~ dgamma(1.5, .1)
+}
+'
+
+writeLines(mdl, 'code/CultModel.jags')
+
+yield <- twoway$yield
+ncult <- as.numeric(twoway$seedType)
+ninoc <- as.numeric(twoway$inoculate)
+
+jags.data <- c('yield', 'ncult', 'ninoc')
+jags.params <- c('mu','vv')
+
+innits <- function(){list('mu'= matrix(0,2,3), 'vv', 15)}
+
+cult1.jags <- jags( data=jags.data,
+                    # inits=innits,
+                    parameters.to.save=jags.params,
+                    model.file='code/CultModel.jags',
+                    n.iter=12000, n.burnin=2000,
+                    n.chains=1, n.thin=1)
+cult1.sim <- as.mcmc(cult1.jags)
+@
+
+Effects model and cell means model are two different ways to do analysis of variance. BYU was a pioneer of the cell means model.
+
+\subsection{ANOVA Marginal Means} % (fold)
+\label{sub:anova_marginal_means}
+
+marginals are calculated as $\mu_{1\cdot} = \frac{\mu_{11} + \mu_{12} + \mu_{13}}{3}$
+its just a mean of the means
+<<>>=
+mu1dot <- (cult1.sim[,2] + cult1.sim[,4] + cult1.sim[,6])/3
+mu2dot <- (cult1.sim[,3] + cult1.sim[,5] + cult1.sim[,7])/3
+
+plot(mu1dot-mu2dot)
+mean(mu2dot-mu1dot>0)
+
+mudot1 <- (cult1.sim[,2] + cult1.sim[,3])/2
+mudot2 <- (cult1.sim[,4] + cult1.sim[,5])/2
+mudot3 <- (cult1.sim[,6] + cult1.sim[,7])/2
+
+mean(mudot1 - mudot2 < 0) # Probability mu_dot2 is bigger than mu_dot1
+mean(mudot3 - mudot2 > 0) # Probability mu_dot3 is bigger than mu_dot2
+@
+% subsection anova_marginal_means (end)
+\subsection{ANOVA Interactions} % (fold)
+\label{sub:anova_interactions}
+interactions are tested in four cell groups the formula is
+\begin{align*}
+    \mu_{11}-\mu_{21} = \mu_{12}-\mu_{22}\\
+    \mu_{11}-\mu_{21} - \mu_{12}+\mu_{22} = 0
+\end{align*}
+
+
+<<>>=
+int1 <- cult1.sim[,2] - cult1.sim[,4] - cult1.sim[,3] - cult1.sim[,4]
+int2 <- cult1.sim[,4] - cult1.sim[,6] - cult1.sim[,5] + cult1.sim[,7]
+@
+% subsection anova_interactions (end)
+
+Finally, compare to seed types that with the best inoculate, does it make sense to pay for the better seed or does the $\mu_{11}-\mu_{21} = \mu_{12}-\mu_{22}$ come from the inoculate
+<<>>=
+se1 <- cult1.sim[,6] - cult1.sim[,7]
+mean(se1<0)
+@
+\subsection{Linear Algebra Solution} % (fold)
+\label{sec:linear_algebra_solution}
+% \begin{align*}
+%     \begin{bmatrix}
+%         27.4\\
+%         29.7\\
+%         34.5\\
+%     \end{bmatrix}
+%      = 
+%      \begin{bmatrix}
+%      \end{bmatrix}
+% \end{align*}
+
+\[
+\underline{\hat{\mu}} = (W' W)^{-1} W' \underline{y}
+\]
+Least Squares Solution
+<<>>=
+w  <- rbind(diag(1,6),diag(1,6),diag(1,6),diag(1,6))
+muhat <- solve(t(w) %*% w) %*% t(w) %*% twoway$yield
+@
+
+\begin{align*}
+    y=W\mu\\
+    y=WI\mu\\
+    y= \underbrace{WA^{-1}}_{X} \underbrace{A\mu}_{\beta}
+\end{align*}
+
+
+\begin{align*}
+\begin{bmatrix}
+    \frac{1}{6} & \frac{1}{6}& \frac{1}{6}& \frac{1}{6}& \frac{1}{6}& \frac{1}{6}\\
+    \frac{1}{6} & \frac{1}{6}& \frac{1}{6}& \frac{1}{6}& \frac{1}{6}& \frac{1}{6}\\
+    \frac{1}{2} & -\frac{1}{2}& 0& \frac{1}{2}& -\frac{1}{2}& 0\\
+    0&\frac{1}{2} & -\frac{1}{2}& 0&\frac{1}{2}& -\frac{1}{2}\\
+    1 & -1 & 0 & -1 & 1 & 0\\
+    0 & 1 & -1 & 0 & -1 & 1\\
+\end{bmatrix}
+\begin{bmatrix}
+    \mu_{11}\\
+    \mu_{12}\\
+    \mu_{13}\\
+    \mu_{21}\\
+    \mu_{22}\\
+    \mu_{23}\\
+\end{bmatrix}
+=
+\begin{bmatrix}
+    \mu_{\cdot\cdot}\\
+    \mu_{1\cdot} - \mu_{2\cdot}\\
+    \mu_{\cdot1} - \mu_{\cdot2}\\
+    \mu_{\cdot2} - \mu_{\cdot3}\\
+    \mu_{11}  - \mu_{12} - \mu_{21}+ \mu_{22}\\
+    \mu_{12}  - \mu_{13} - \mu_{22}+ \mu_{23}\\
+\end{bmatrix}
+\end{align*}
+% subsection linear_algebra_solution (end)
 % section anova (end)
 \end{document}
