@@ -887,4 +887,12 @@ muhat <- solve(t(w) %*% w) %*% t(w) %*% twoway$yield
 \end{align*}
 % subsection linear_algebra_solution (end)
 % section anova (end)
+\renewcommand{\dateTaken}{February 12, 2013}
+\daysep
+<<>>=
+dev <- function(x) {
+    fp <- length(y) * log(2* pi)
+    sp <- 
+}
+@
 \end{document}
