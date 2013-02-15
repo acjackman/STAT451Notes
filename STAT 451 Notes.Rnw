@@ -251,7 +251,7 @@ twogroups.sim <- jags(data=data.jags, parameters.to.save=parms, inits=innts, mod
 twogroups.sim
 
 sims <- as.mcmc(twogroups.sim)
-plot(sims)
+plot(sims, auto.layout=FALSE, ask=FALSE)
 
 # plot(sims[,2], type='l')
 @
@@ -380,7 +380,7 @@ hw1norm.sim <- jags(data=jags.data,
                    model.file="code/hw1norm.jags",
                    n.iter=6000, n.burnin=1000, n.chains=1, n.thin=1)
 sims <- as.mcmc(hw1norm.sim)
-plot()
+plot(sims, auto.layout=FALSE, ask=FALSE)
 
 @
 % section posterior_predictives (end)
@@ -437,7 +437,7 @@ Let's check for convergence
 <<>>=
 sims <- as.mcmc(linreg.sim)
 # Trace Plots
-plot(sims)
+plot(sims, auto.layout=FALSE, ask=FALSE)
 # Autocorrelation plots
 autocorr.plot(sims, ask=FALSE)
 effectiveSize(sims)
@@ -681,7 +681,7 @@ anova.sim <- jags(data=jags.data,
                   n.thin=1
                   )
 sims <- as.mcmc(anova.sim)
-plot(sims, ask=FALSE)
+plot(sims, auto.layout=FALSE, ask=FALSE)
 autocorr.plot(sims)
 raftery.diag(sims)
 effectiveSize(sims)
@@ -889,10 +889,160 @@ muhat <- solve(t(w) %*% w) %*% t(w) %*% twoway$yield
 % section anova (end)
 \renewcommand{\dateTaken}{February 12, 2013}
 \daysep
-<<>>=
+<<eval=FALSE>>=
 dev <- function(x) {
     fp <- length(y) * log(2* pi)
     sp <- 
 }
 @
+\renewcommand{\dateTaken}{February 14, 2013}
+\daysep
+\section{Analysis of Covariance ANCOVA} % (fold)
+\label{sec:analysis_of_covariance_ancova}
+
+Join Me 777-129-200
+
+<<>>=
+ac <- read.table("data/06ancova.dat", header=TRUE)
+@
+
+First thing you do for analysis is plot the data
+<<>>=
+plot(ac$speed,ac$scrap,pch=ac$lines)
+@
+
+Let's try and come up with a model
+\begin{align}
+y_{i j} = \beta_{0} + \beta_{1}\cdot\text{Line} + \beta_{2}\cdot\text{Speed} + \beta_{3}\cdot \text{Line} \cdot \text{Speed}
+\end{align}
+
+Or we could do this
+\begin{align*}
+    y_{i j} = \beta_{0 i} + \beta_{1 i}\cdot\text{Speed}
+\end{align*}
+
+<<tidy=FALSE>>=
+mdl <- 'model {
+    for(i in 1:27) {
+        scrap[i] ~ dnorm(mu[i], prec);
+        mu[i] <- b_0[line[i]] + b_1[line[i]]*speed[i];
+    }
+
+    for (i in 1:2) {
+        b_0[i] ~ dnorm(30, .001);
+        b_1[i] ~ dnorm(0, .01);
+    }
+
+    vr ~ dgamma(1.5, .0125);
+    prec <- 1/vr;
+}
+'
+writeLines(mdl, 'code/ANCOVAModel.jags')
+@
+prior for beta not covers 30*100
+
+<<>>=
+speed <- ac$speed
+line <- ac$line
+scrap <- ac$scrap
+jags.data <- c('speed', 'line', 'scrap')
+jags.params <- c('b_0','b_1', 'vr')
+ancova.jags <- jags( data=jags.data,
+                    # inits=innits,
+                    parameters.to.save=jags.params,
+                    model.file='code/ANCOVAModel.jags',
+                    n.iter=12000, n.burnin=2000,
+                    n.chains=1, n.thin=1)
+ancova.jags
+@
+
+Diagnostics
+<<ANCOVA_Diagnostics,out.width='.19\\textwidth'>>=
+ancova.sim <- as.mcmc(ancova.jags)
+plot(ancova.sim, auto.layout=FALSE, ask=FALSE)
+autocorr.plot(ancova.sim, auto.layout=FALSE, ask=FALSE)
+raftery.diag(ancova.sim)
+@
+
+
+Test the probability that the $\beta_{1\cdot}$ are different
+<<>>=
+b11 <- ancova.sim[,3]
+b12 <- ancova.sim[,4]
+slopdif <- b11 - b12
+mean(slopdif < 0)
+mean(slopdif > 0)
+@
+
+Try a new model without the different $\beta_{1}$ then compare the DIC
+
+<<tidy=FALSE>>=
+mdl <- 'model {
+    for(i in 1:27) {
+        scrap[i] ~ dnorm(mu[i], prec);
+        mu[i] <- b_0[line[i]] + b_1*speed[i];
+    }
+
+    b_1 ~ dnorm(0, .01);
+    for (i in 1:2) {
+        b_0[i] ~ dnorm(30, .001);
+    }
+
+    vr ~ dgamma(1.5, .0125);
+    prec <- 1/vr;
+}
+'
+writeLines(mdl, 'code/ANCOVAModel_1.jags')
+@
+prior for beta not covers
+
+<<>>=
+speed <- ac$speed
+line <- ac$line
+scrap <- ac$scrap
+jags.data <- c('speed', 'line', 'scrap')
+jags.params <- c('b_0','b_1', 'vr')
+ancova1.jags <- jags( data=jags.data,
+                    # inits=innits,
+                    parameters.to.save=jags.params,
+                    model.file='code/ANCOVAModel_1.jags',
+                    n.iter=12000, n.burnin=2000,
+                    n.chains=1, n.thin=1)
+ancova1.jags
+@
+
+Diagnostics
+<<ANCOVA1_Diagnostics,out.width='.19\\textwidth'>>=
+ancova1.sim <- as.mcmc(ancova1.jags)
+# plot(ancova.sim, auto.layout=FALSE, ask=FALSE)
+# autocorr.plot(ancova.sim, auto.layout=FALSE, ask=FALSE)
+# raftery.diag(ancova.sim)
+@
+
+Lets test differences in line by testing difference in intercept
+<<ANCOVA1_Line_Diff>>=
+b_0_1 <- ancova1.sim[,1]
+b_0_2 <- ancova1.sim[,2]
+line_diff <- b_0_1 - b_0_2
+mean(line_diff < 0)
+mean(line_diff > 0)
+plot(density(line_diff), col='blue')
+@
+
+<<>>=
+plot(ac$speed, ac$scrap, pch=ac$lines)
+abline(82.2, 1.22, col='blue')
+abline(13.7, 1.3, col='red')
+
+b_0_1 <- ancova.sim[,1]
+b_0_2 <- ancova.sim[,2]
+b_1_1 <- ancova.sim[,3]
+b_1_2 <- ancova.sim[,4]
+
+y1_300 <- 300*b_1_1 + b_0_1
+y2_300 <- 300*b_1_2 + b_0_2
+diff_300 <- y1_300 - y2_300
+mean(diff_300 > 0)
+@
+% section analysis_of_covariance_ancova (end)
 \end{document}
