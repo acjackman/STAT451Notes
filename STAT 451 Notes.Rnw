@@ -1045,4 +1045,41 @@ diff_300 <- y1_300 - y2_300
 mean(diff_300 > 0)
 @
 % section analysis_of_covariance_ancova (end)
+\renewcommand{\dateTaken}{February 21, 2013}
+\daysep
+\begin{tabular}{ccccccc}
+   &   &    & B  &    &    & \\
+   &   &  1 &  2 &  3 &  4 & \\
+   & 1 &  $\mu_{11}$ &  $\mu_{12}$ &  $\mu_{13}$ &  $mu_{14}$ &  $\mu_{1\bullet}$\\ %$\frac{\mu_{11} +  \mu_{12} +  \mu_{13} +  mu_{14}}{4}=\mu_{1\bullet}$\\
+ A & 2 &  $\mu_{21}$ &  $\mu_{22}$ &  $\mu_{23}$ &  $mu_{24}$ &  $\mu_{2\bullet}$\\ %$\frac{\mu_{21} +  \mu_{22} +  \mu_{23} +  mu_{24}}{4}=\mu_{2\bullet}$\\
+   & 3 &  $\mu_{31}$ &  $\mu_{32}$ &  $\mu_{33}$ &  $mu_{34}$ &  $\mu_{3\bullet}$\\ %$\frac{\mu_{31} +  \mu_{32} +  \mu_{33} +  mu_{34}}{4}=\mu_{3\bullet}$\\
+   & 4 &  $\mu_{41}$ &  $\mu_{42}$ &  $\mu_{43}$ &  $mu_{44}$ &  $\mu_{4\bullet}$\\ %$\frac{\mu_{41} +  \mu_{42} +  \mu_{43} +  mu_{44}}{4}=\mu_{4\bullet}$\\
+   % &   & $\frac{\mu_{11} +  \mu_{21} +  \mu_{31} +  mu_{41}}{4}=\mu_{\bullet 1}$
+   %     & $\frac{\mu_{12} +  \mu_{22} +  \mu_{32} +  mu_{42}}{4}=\mu_{\bullet 2}$
+   %     & $\frac{\mu_{13} +  \mu_{23} +  \mu_{33} +  mu_{43}}{4}=\mu_{\bullet 3}$
+   %     & $\frac{\mu_{14} +  \mu_{24} +  \mu_{34} +  mu_{44}}{4}=\mu_{\bullet 4}$\\
+\end{tabular}
+
+\section{Multiple Sources of Variation} % (fold)
+\label{sec:multiple_sources_of_variation}
+\begin{align*}
+    \underline{y}= X\underline{\beta} + \underline{\varepsilon}\\
+    \varepsilon \sim \mathcal{N}(\underline{0}, \sigma^{2 \underline{T}})\\
+    \underline{y} = X \underline{\beta} + Z \underline{u} + e\\
+    e\sim \mathcal{N}(\underline{0}, R)\\
+    \underline{u} \sim \mathcal{N}(\underline{0}, G)\\
+\end{align*}
+
+\begin{align*}
+    \expv(Y)= \expv(X \beta + Z u + e) = \expv(X \beta) + \expv(Z u) + \expv(e)= X \beta\\
+    \var(Y) = \var(X \beta + Z u + e) = \var( Z u + e)
+\end{align*}
+If we assume that $u$ and $e$ are independent then we can move forward easily
+
+$V(A\underline{z})=A V(z) A'$
+$A V(z) A'$ is a $p \times p$ matrix
+\begin{align*}
+    \var( Z u + e)= V(Z\underline{u}) + \var(\underline{e}) = Z \var(\underline{u}) Z' + V(\underline{e} = Z G Z' + R
+\end{align*}
+% section multiple_sources_of_variation (end)
 \end{document}
