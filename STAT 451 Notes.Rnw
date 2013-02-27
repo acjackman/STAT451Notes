@@ -27,6 +27,7 @@ library(R2jags)
 
 \begin{document}
 \input{./Styles/title.tex}
+\tableofcontents
 \renewcommand{\dateTaken}{January 8, 2013}
 \daysep
 
@@ -837,7 +838,7 @@ mean(se1<0)
 %         29.7\\
 %         34.5\\
 %     \end{bmatrix}
-%      = 
+%      =
 %      \begin{bmatrix}
 %      \end{bmatrix}
 % \end{align*}
@@ -892,7 +893,7 @@ muhat <- solve(t(w) %*% w) %*% t(w) %*% twoway$yield
 <<eval=FALSE>>=
 dev <- function(x) {
     fp <- length(y) * log(2* pi)
-    sp <- 
+    sp <-
 }
 @
 \renewcommand{\dateTaken}{February 14, 2013}
@@ -1081,5 +1082,155 @@ $A V(z) A'$ is a $p \times p$ matrix
 \begin{align*}
     \var( Z u + e)= V(Z\underline{u}) + \var(\underline{e}) = Z \var(\underline{u}) Z' + V(\underline{e} = Z G Z' + R
 \end{align*}
+\renewcommand{\dateTaken}{February 26, 2013}
+\daysep
+Treatments:
+\begin{tabular}{ccc}
+Block 1 &  & Block 2\\
+I ($y_{11}$) & & I ($y_{12}$)\\
+II ($y_{21}$) & & II ($y_{22}$)\\
+\end{tabular}
+
+Model in matrix form (Equation~\ref{eq:mv_matrix_model})
+\begin{align}\label{eq:mv_matrix_model}
+    \begin{bmatrix}
+        y_{11}\\
+        y_{12}\\
+        y_{21}\\
+        y_{22}\\
+    \end{bmatrix}
+    =\begin{bmatrix}
+        1 & 0\\
+        1 & 0\\
+        0 & 1\\
+        0 & 1\\
+    \end{bmatrix}
+\begin{pmatrix}
+    \mu_{1}\\
+    \mu_{2}\\
+\end{pmatrix} +
+\begin{bmatrix}
+    1 & 0\\
+    0 & 1\\
+    1 & 0\\
+    0 & 1\\
+\end{bmatrix}
+\begin{pmatrix}
+    u_{1}\\
+    u_{2}\\
+\end{pmatrix} +
+\begin{bmatrix}
+    e_{11}\\
+    e_{12}\\
+    e_{21}\\
+    e_{22}\\
+\end{bmatrix}
+\end{align}
+
+\begin{align*}
+    e_{ij} \sim^{iid} N(0, \sigma^{2}_{e})\\
+    u_{j} \sim^{iid} N(0,\sigma^{2}_{b}) \\
+\end{align*}
+\begin{align*}
+    R &= \begin{bmatrix}
+        \sigma^{2}_{e} & 0 & 0 & 0\\
+        0 & \sigma^{2}_{e} & 0 & 0\\
+        0 & 0 & \sigma^{2}_{e} & 0\\
+        0 & 0 & 0 & \sigma^{2}_{e}\\
+    \end{bmatrix}\\
+    G &= \begin{pmatrix}
+        \sigma^{2}_{b} & 0\\
+        0 & \sigma^{2}_{b}
+    \end{pmatrix}
+\end{align*}
+
+
+\begin{align*}
+\begin{bmatrix}
+        1 & 0\\
+        1 & 0\\
+        0 & 1\\
+        0 & 1\\
+\end{bmatrix}
+\begin{pmatrix}
+        \sigma^{2}_{b} & 0\\
+        0 & \sigma^{2}_{b}
+    \end{pmatrix}
+    \begin{bmatrix}
+        1 & 0 & 1 & 0\\
+        0 & 1 & 0 & 1\\
+    \end{bmatrix}
+    +\begin{bmatrix}
+        \sigma^{2}_{e} & 0 & 0 & 0\\
+        0 & \sigma^{2}_{e} & 0 & 0\\
+        0 & 0 & \sigma^{2}_{e} & 0\\
+        0 & 0 & 0 & \sigma^{2}_{e}\\
+    \end{bmatrix}\\
+    Z G Z' + R = \begin{bmatrix}
+        \sigma^{2}_{e} + \sigma^{2}_{b} & 0 & \sigma^{2}_{b} & 0\\
+        0 & \sigma^{2}_{e} + \sigma^{2}_{b}  & 0 & \sigma^{2}_{b}\\
+        \sigma^{2}_{b}  & 0 & \sigma^{2}_{e} + \sigma^{2}_{b} & 0 \\
+        0 & \sigma^{2}_{b} & 0 & \sigma^{2}_{e} + \sigma^{2}_{b}\\
+    \end{bmatrix}
+\end{align*}
+\begin{align*}
+    \rho_{y_{11} y_{21}} = \frac{\sigma^{2}_{b}}{\sqrt{\sigma^{2}_{3} + \sigma^{2}_{b}}\sqrt{\sigma^{2}_{3} + \sigma^{2}_{b}}} =\frac{\sigma^{2}_{b}}{\sigma^{2}_{3} + \sigma^{2}_{b}}
+\end{align*}
 % section multiple_sources_of_variation (end)
+<<>>=
+twoway <- read.table("data/05twoway.dat", col.names=c("block","seedType","inoculate","yield"))
+@
+
+First model with multiple souces of variance, s2blk is a hyper-prior, or a prior on a prior
+<<MixedModelModel,tidy=FALSE>>=
+mdl <- ' model {
+    for (i in 1:21) {
+        yield[i] ~ dnorm(mu[i], 1/s2e)
+        mu[i] <- aaron[cultn[i], inocn[i]] + u[block[i]]
+    }
+
+    for (i in 1:2){
+        for (j in 1:3) {
+            aaron[i,j] ~ dnorm(30, .001);
+
+        }
+    }
+
+    for (i in 1:4) {
+        u[i] ~ dnorm(0, 1/s2blk)
+    }
+
+    s2e ~ dgamma(1.5, .1);
+    s2blk ~ dgamma(1.5, .1);
+}
+'
+writeLines(mdl, 'code/MixedModels.jags')
+@
+
+<<MixedModelSimulation>>=
+yield <- twoway[, 4]
+cultn <- as.numeric(twoway$seedType)
+inocn <- as.numeric(twoway$inoculate)
+block <- twoway[, 1]
+
+jags.data <- c('yield', 'cultn', 'inocn', 'block')
+jags.params <- c('aaron', 's2e', 's2blk')
+set.seed(343)
+mixedm.jags <- jags(data=jags.data,
+                    parameters.to.save=jags.params,
+                    model.file='code/MixedModels.jags',
+                    n.iter=12000, n.burnin=2000,
+                    n.chains=1, n.thin=1)
+@
+
+Difference between 1 and 2
+<<>>=
+mixedm.sim <- as.mcmc(mixedm.jags)
+cultivarA <- (mixedm.sim[, 1] + mixedm.sim[, 3] + mixedm.sim[, 5])/3
+cultivarB <- (mixedm.sim[, 2] + mixedm.sim[, 4] + mixedm.sim[, 6])/3
+
+mean(cultivarA)
+mean(cultivarB)
+plot(density(cultivarA - cultivarB))
+@
 \end{document}
