@@ -1233,4 +1233,78 @@ mean(cultivarA)
 mean(cultivarB)
 plot(density(cultivarA - cultivarB))
 @
+\renewcommand{\dateTaken}{February 28, 2013}
+\daysep
+Simpler Mixed Model
+<<>>=
+bond <- read.table("data/07mixedmods.dat", header=TRUE)
+metn <- rep(1:3, 21/3)
+bond <- cbind(bond, metn)
+@
+<<>>=
+mdl <- ' model{
+    for (i in 1:21){
+        pressure[i] ~ dnorm(mu[i], 1/s2error);
+        mu[i] <- gamma[metn[i]] + u[ingot[i]]
+    }
+
+    for (i in 1:3) {
+        gamma[i] ~ dnorm(75, 0.001)
+    }
+
+    for (i in 1:7) {
+        u[i] ~ dnorm(0, 1/s2ing)
+    }
+
+    s2error ~ dgamma(1.5, 0.1);
+    s2ing   ~ dgamma(1.5, 0.1);
+}
+'
+writeLines(mdl, 'code/SimpleMixedModel.jags')
+@
+<<>>=
+metn     <- bond[, 4]
+ingot    <- bond[, 1]
+pressure <- bond[, 3]
+
+jags.data   <- c('metn', 'ingot', 'pressure')
+jags.params <- c('gamma', 's2error', 's2ing')
+
+bond.jags <- jags(data=jags.data,
+                  parameters.to.save=jags.params,
+                  model.file='code/SimpleMixedModel.jags',
+                  n.iter=12000, n.burnin=2000,
+                  n.chains=1, n.thin=1)
+bond.sim <- as.mcmc(bond.jags)
+@
+
+ICC or interclass corelation is a measure of reliability of messurements
+\begin{align}
+    ICC = \frac{\sigma^{2}_{i}}{\sigma^{2}_{e}+\sigma^{2}_{i}}
+\end{align}
+<<>>=
+icc <- bond.sim[, 5]/(bond.sim[, 6]+bond.sim[, 5])
+plot(density(icc))
+@
+
+plot something
+<<>>=
+indif <- bond.sim[, 3] - bond.sim[, 2]
+icdif <- bond.sim[, 3] - bond.sim[, 4]
+@
+
+\textbf{Back to Complex}
+\begin{tabular}{ccccc}
+ &  &  & inoc & \\
+ &  & con & dea & liv \\
+ cult & a & $\alpha_{1 1}$ & $\alpha_{1 2}$ & $\alpha_{1 3}$\\
+ & b & $\alpha_{2 1}$ & $\alpha_{2 2}$ & $\alpha_{2 3}$\\
+\end{tabular}
+<<>>=
+int1 <- mixedm.sim[, 2] - mixedm.sim[, 4] - mixedm.sim[, 3] + mixedm.sim[, 5]
+int2 <- mixedm.sim[, 4] - mixedm.sim[, 6] - mixedm.sim[, 5] + mixedm.sim[, 7]
+plot(density(int1))
+plot(density(int2))
+@
+Let's say that there's no interaction, because 
 \end{document}
