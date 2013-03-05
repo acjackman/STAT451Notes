@@ -1306,5 +1306,120 @@ int2 <- mixedm.sim[, 4] - mixedm.sim[, 6] - mixedm.sim[, 5] + mixedm.sim[, 7]
 plot(density(int1))
 plot(density(int2))
 @
-Let's say that there's no interaction, because 
+Let's say that there's no interaction, because
+
+\renewcommand{\dateTaken}{March  5, 2013}
+\daysep
+
+\section{Random Coefficients Model} % (fold)
+\label{sec:random_coefficients_model}
+Genetically identical seeds we treat as subjects
+
+Sixty observations, but only ten wheat types, so there are really somewhere in the middle
+
+\begin{align*}
+    \text{yield}_{i j} = \beta_{0} + \beta_{1}\cdot \text{moisture}_{j} + u1_{i} + u2_{i} \cdot \text{moisture}_{j} + \text{error}_{ij}
+\end{align*}
+so the deviation $u$ has both a slope and an intercept.
+
+% \begin{align*}
+%     y=X \beta + Z u + e
+% \end{align*}
+\begin{align*}
+    y = \begin{bmatrix}
+        1 & 10\\
+        1 & 17\\
+        1 & \vdots\\
+        \vdots & \ddots\\
+    \end{bmatrix}
+    \begin{pmatrix}
+        \beta_{0}\\
+        \beta_{1}
+    \end{pmatrix}
+    \begin{bmatrix}
+        1 & 10 & 0 & 0 & 0 & 0 & \ldots \\
+        1 & 57 & 0 & 0 & 0 & 0 & \ldots \\
+        \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \ldots \\
+        1 & 40 & 0 & 0 & 0 & 0 & \ldots \\
+        0 & 0 & 1 & 16 & 0 & 0 & \ldots \\
+        \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \ldots \\
+        0 & 0 & 0 & 0 & 1 & 39 & \ldots \\
+        \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \ddots
+    \end{bmatrix}
+\begin{pmatrix}
+    u0_{1}\\
+    u1_{1}\\
+    u0_{2}\\
+    u1_{2}\\
+    u0_{3}\\
+    u1_{3}\\
+    u0_{4}\\
+    u1_{4}\\
+    u0_{5}\\
+    u1_{5}\\
+    u0_{6}\\
+    u1_{6}\\
+\end{pmatrix}
+\end{align*}
+\begin{align*}
+    G=\begin{bmatrix}
+        \sigma^{2}_{int} & 0                & 0                & 0 & \ldots \\
+        0                & \sigma^{2}_{slp} & 0                & 0 & \ldots \\
+        0                & 0                & \sigma^{2}_{int} & 0 & \ldots \\
+        0                & 0                & 0                & \sigma^{2}_{slp} & \ldots \\
+        \vdots & \vdots & \vdots & \vdots & \ddots
+    \end{bmatrix}
+\end{align*}
+
+<<"RandomCoeffModel", tidy=FALSE>>=
+wheat <- read.table("data/10randomcoef.dat", header=TRUE)
+yield <- wheat$yield
+variety <- wheat$variety
+moisture <- wheat$moisture
+mdl <- ' model {
+    for (i in 1:60) {
+        yield[i] ~ dnorm(mu[i], 1/s2err)
+        mu[i] <- b0 + b1 * moisture[i] + u0[variety[i]] + u1[variety[i]] * moisture[i]
+    }
+
+    b0 ~ dnorm(30, 0.001)
+    b1 ~ dnorm(0, 0.1)
+
+    for (i in 1:10) {
+        u0[i] ~ dnorm(0, 1/s2int)
+        u1[i] ~ dnorm(0, 1/s2slp)
+    }
+
+    s2err ~ dgamma(1.1, .5)
+    s2int ~ dgamma(1.1, .1)
+    s2slp ~ dgamma(1.1, 2)
+}
+'
+writeLines(mdl, 'code/RandomCoeff.jags')
+@
+
+<<RandomCoeffSim, dependson=c("RandomCoeffModel"), out.width='.16\\textwidth'>>=
+jags.data   <- c('yield', 'variety', 'moisture')
+jags.params <- c('b0', 'b1', 'u0','u1', 's2err', 's2int', 's2slp')
+
+rc1.jags <- jags(data=jags.data,
+                  parameters.to.save=jags.params,
+                  model.file='code/RandomCoeff.jags',
+                  n.iter=12000, n.burnin=2000,
+                  n.chains=1, n.thin=1)
+rc1.jags
+rc1.sim <- as.mcmc(rc1.jags)
+plot(rc1.sim, auto.layout=FALSE, ask=FALSE)
+@
+
+Find the variance of the $y$
+<<>>=
+g <- rbind(cbind(18.645, 0), cbind(0, .005))
+r <- diag(.392, 60)
+z <- model.matrix(~-1+as.factor(variety) + as.factor(variety):moisture, wheat)
+Z <- z[,c(1,11,2,12,3,13,4,14,5,15,6,16,7,17,8,18,9,19,10,20)] # need to rearrange so that the intercepts and slopes are interleaved
+G <- kronecker(diag(1,10),g)
+V <- Z %*% G %*% t(Z) + r
+@
+% section random_coefficients_model (end)
 \end{document}
