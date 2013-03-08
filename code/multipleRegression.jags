@@ -1,0 +1,44 @@
+
+model {
+    for( i in 1:N){
+        y[i] ~ dnorm(mu[i], prec)
+        mu[i] <- b_0 +
+                 b_gen*gender[i] +
+                 b_bmi*bmi[i] +
+                 b_mph*mph[i] +
+                 b_hr*hr[i] +
+                 b_rpe*rpe[i] +
+                 # b_gen_bmi*gen_bmi[i] +
+                 # b_gen_mph*gen_mph[i] +
+                 # b_gen_hr*gen_hr[i] +
+                 # b_gen_rpe*gen_rpe[i] +
+                 # b_bmi_mph*bmi_mph[i] +
+                 # b_bmi_hr*bmi_hr[i] +
+                 # b_bmi_rpe*bmi_rpe[i] +
+                 b_mph_hr*mph_hr[i] # +
+                 # b_mph_rpe*mph_rpe[i] +
+                 # b_hr_rpe*hr_rpe[i]
+    }
+
+    b_0   ~ dnorm(0, .00001);
+    b_gen ~ dnorm(0, .001);
+    b_bmi ~ dnorm(0, .001);
+    b_mph ~ dnorm(0, .001);
+    b_hr  ~ dnorm(0, .001);
+    b_rpe ~ dnorm(0, .001);
+
+    # b_gen_bmi ~ dnorm(0, .001);
+    # b_gen_mph ~ dnorm(0, .001);
+    # b_gen_hr  ~ dnorm(0, .001);
+    # b_gen_rpe ~ dnorm(0, .001);
+    # b_bmi_mph ~ dnorm(0, .001);
+    # b_bmi_hr  ~ dnorm(0, .001);
+    # b_bmi_rpe ~ dnorm(0, .001);
+    b_mph_hr  ~ dnorm(0, .001);
+    # b_mph_rpe ~ dnorm(0, .001);
+    # b_hr_rpe  ~ dnorm(0, .001);
+
+    vr ~ dgamma(2, .05)
+    prec <- 1/vr
+}
+

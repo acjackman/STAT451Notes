@@ -31,3 +31,6 @@
 *.vrb
 *.xdy
 *.tdo
+.Rapp.history
+cache/*
+figure/*

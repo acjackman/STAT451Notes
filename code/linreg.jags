@@ -1,0 +1,13 @@
+
+model {
+for (i in 1:N) {
+y[i] ~ dnorm(mu[i], prec)
+mu[i] <- beta_0 + beta_1 * x[i]
+}
+invisible(".BeGiN_TiDy_IdEnTiFiEr_HaHaHa.HaHaHa_EnD_TiDy_IdEnTiFiEr")
+beta_0 ~ dnorm(0, .00001)
+beta_1 ~ dnorm(0, .001)
+sigma2 ~ dgamma(1.1, .5)
+prec <- 1/sigma2
+}
+

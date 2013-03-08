@@ -1,0 +1,18 @@
+ model{
+for (i in 1:21){
+pressure[i] ~ dnorm(mu[i], 1/s2error);
+mu[i] <- gamma[metn[i]] + u[ingot[i]]
+}
+invisible(".BeGiN_TiDy_IdEnTiFiEr_HaHaHa.HaHaHa_EnD_TiDy_IdEnTiFiEr")
+for (i in 1:3) {
+gamma[i] ~ dnorm(75, 0.001)
+}
+invisible(".BeGiN_TiDy_IdEnTiFiEr_HaHaHa.HaHaHa_EnD_TiDy_IdEnTiFiEr")
+for (i in 1:7) {
+u[i] ~ dnorm(0, 1/s2ing)
+}
+invisible(".BeGiN_TiDy_IdEnTiFiEr_HaHaHa.HaHaHa_EnD_TiDy_IdEnTiFiEr")
+s2error ~ dgamma(1.5, 0.1);
+s2ing   ~ dgamma(1.5, 0.1);
+}
+

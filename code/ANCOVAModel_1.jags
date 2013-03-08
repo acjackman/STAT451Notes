@@ -1,0 +1,15 @@
+model {
+    for(i in 1:27) {
+        scrap[i] ~ dnorm(mu[i], prec);
+        mu[i] <- b_0[line[i]] + b_1*speed[i];
+    }
+
+    b_1 ~ dnorm(0, .01);
+    for (i in 1:2) {
+        b_0[i] ~ dnorm(30, .001);
+    }
+
+    vr ~ dgamma(1.5, .0125);
+    prec <- 1/vr;
+}
+

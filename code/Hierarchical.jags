@@ -1,0 +1,22 @@
+ model {
+    for (i in 1:60) {
+        yield[i] ~ dnorm(mu[i], 1/s2err)
+        mu[i] <- u0[variety[i]] + u1[variety[i]] * moisture[i]
+    }
+
+    b0 ~ dnorm(30, 0.001)
+    b1 ~ dnorm(0, 0.1)
+
+    for (i in 1:10) {
+        u0[i] ~ dnorm(beta0, 1/s2int)
+        u1[i] ~ dnorm(beta1, 1/s2slp)
+    }
+
+    beta0 ~ dnorm(30, 0.001)
+    beta1 ~ dnorm(0, 0.1)
+
+    s2err ~ dgamma(1.1, .5)
+    s2int ~ dgamma(1.1, .1)
+    s2slp ~ dgamma(1.1, 2)
+}
+

@@ -1,0 +1,11 @@
+
+model {
+for (i in 1:5) {
+y[i] ~ dnorm(mu, prec)
+}
+invisible(".BeGiN_TiDy_IdEnTiFiEr_HaHaHa.HaHaHa_EnD_TiDy_IdEnTiFiEr")
+mu ~ dunif(0,1)
+s2 ~ dunif(0,.05)
+prec <- 1/s2
+}
+

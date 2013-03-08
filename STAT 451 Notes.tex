@@ -1,4 +1,59 @@
-\documentclass[12pt,letterpaper,oneside]{article}
+\documentclass[12pt,letterpaper,oneside]{article}\usepackage{graphicx, color}
+%% maxwidth is the original width if it is less than linewidth
+%% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+\makeatletter
+\def\maxwidth{ %
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+\makeatother
+
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\definecolor{fgcolor}{rgb}{0.2, 0.2, 0.2}
+\newcommand{\hlnumber}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hlfunctioncall}[1]{\textcolor[rgb]{0.501960784313725,0,0.329411764705882}{\textbf{#1}}}%
+\newcommand{\hlstring}[1]{\textcolor[rgb]{0.6,0.6,1}{#1}}%
+\newcommand{\hlkeyword}[1]{\textcolor[rgb]{0,0,0}{\textbf{#1}}}%
+\newcommand{\hlargument}[1]{\textcolor[rgb]{0.690196078431373,0.250980392156863,0.0196078431372549}{#1}}%
+\newcommand{\hlcomment}[1]{\textcolor[rgb]{0.180392156862745,0.6,0.341176470588235}{#1}}%
+\newcommand{\hlroxygencomment}[1]{\textcolor[rgb]{0.43921568627451,0.47843137254902,0.701960784313725}{#1}}%
+\newcommand{\hlformalargs}[1]{\textcolor[rgb]{0.690196078431373,0.250980392156863,0.0196078431372549}{#1}}%
+\newcommand{\hleqformalargs}[1]{\textcolor[rgb]{0.690196078431373,0.250980392156863,0.0196078431372549}{#1}}%
+\newcommand{\hlassignement}[1]{\textcolor[rgb]{0,0,0}{\textbf{#1}}}%
+\newcommand{\hlpackage}[1]{\textcolor[rgb]{0.588235294117647,0.709803921568627,0.145098039215686}{#1}}%
+\newcommand{\hlslot}[1]{\textit{#1}}%
+\newcommand{\hlsymbol}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hlprompt}[1]{\textcolor[rgb]{0.2,0.2,0.2}{#1}}%
+
+\usepackage{framed}
+\makeatletter
+\newenvironment{kframe}{%
+ \def\at@end@of@kframe{}%
+ \ifinner\ifhmode%
+  \def\at@end@of@kframe{\end{minipage}}%
+  \begin{minipage}{\columnwidth}%
+ \fi\fi%
+ \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
+ \colorbox{shadecolor}{##1}\hskip-\fboxsep
+     % There is no \\@totalrightmargin, so:
+     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
+ \MakeFramed {\advance\hsize-\width
+   \@totalleftmargin\z@ \linewidth\hsize
+   \@setminipage}}%
+ {\par\unskip\endMakeFramed%
+ \at@end@of@kframe}
+\makeatother
+
+\definecolor{shadecolor}{rgb}{.97, .97, .97}
+\definecolor{messagecolor}{rgb}{0, 0, 0}
+\definecolor{warningcolor}{rgb}{1, 0, 1}
+\definecolor{errorcolor}{rgb}{1, 0, 0}
+\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
+
+\usepackage{alltt}
 \newcommand{\university}{Brigham Young University}
 \newcommand{\classCode}{STAT 451}
 \newcommand{\className}{Applied Bayesian Statistics}
@@ -14,6 +69,2506 @@
 
 \input{./Styles/mathCommands.tex}
 
+
+
+
 \begin{document}
 \input{./Styles/title.tex}
+\tableofcontents
+\renewcommand{\dateTaken}{January 8, 2013}
+\daysep
+
+\section{Class Introduction} % (fold)
+\label{sec:class_introduction}
+Office Hours Monday
+
+Keep a copy of the code
+
+Preliminary assignment email now.
+% section class_introduction (end)
+
+\section{Bayesian Methodology} % (fold)
+\label{sec:bayesian_methodology}
+Parameterize state of knowledge
+
+Estimate parameters
+
+\begin{align*}
+    f(\underline{\theta}|\underline{x})=\frac{L(\underline{x}|\underline{\theta})\prod(\underline{\theta})}{\iint_{\underline{\theta}} L(\underline{x}|\underline{\theta})\prod(\underline{\theta}) \dd \underline{\theta}} \propto L(\underline{x}| \underline{\theta})\prod(\underline{\theta})
+\end{align*}
+\subsection{Metropolis Sampler} % (fold)
+\label{sub:metropolis_sampler}
+
+\begin{align*}
+    \pi\left[\frac{1}{\Gamma(\alpha)\beta^{\alpha}}x^{\alpha-1} \exp\left( -\frac{x}{\beta}\right)\right]+ (\pi-1)\left[\frac{1}{\Gamma(\alpha)\beta^{\alpha}}x^{\alpha-1} \exp\left( -\frac{x}{\beta}\right)\right]\\
+    \frac{1}{4}\left[\frac{1}{\Gamma(2)3^{2}}x^{2-1} \exp\left( -\frac{x}{3}\right)\right] +
+    \frac{3}{4}\left[\frac{1}{\Gamma(4)3^{4}}x^{4-1} \exp\left( -\frac{x}{3}\right)\right]\\
+    k=4\Gamma(4) 3^3
+\end{align*}
+\begin{align*}
+    g(x)=k \cdot f(x)= 18 x \exp\left(-\frac{x}{3}\right)+ x^3\exp\left(-\frac{x}{3}\right)
+\end{align*}
+\subsubsection{Metropolis Sampler Steps} % (fold)
+\label{ssub:metropolis_sampler_steps}
+\begin{itemize}
+    \item Initial $x=x_0$
+    \item for $i=1$ to $n$
+    \begin{itemize}
+        \item generate candidate $c$
+        \item $\displaystyle{\frac{g(c)}{g(x_{i-1}} = r}$
+        \item let $x_i=c$ with $\prob=\min(1,r)$
+    \end{itemize}
+\end{itemize}
+% subsubsection metropolis_sampler_steps (end)
+\subsubsection{Metropolis Code} % (fold)
+\label{ssub:metropolis_code}
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcomment{# Define g function}
+g <- \hlfunctioncall{function}(x) \{
+    18 * x * \hlfunctioncall{exp}(-x/3) + x^3 * \hlfunctioncall{exp}(-x/3)
+\}
+
+\hlcomment{# Write Sampler}
+out <- NULL
+out[1] <- 5
+candidate.sigma <- 20
+counter <- 0
+samples <- 10^4
+\hlfunctioncall{for} (i in 2:samples) \{
+    out[i] <- out[i - 1]
+    candidate <- \hlfunctioncall{rnorm}(1, out[i - 1], candidate.sigma)
+    \hlfunctioncall{if} (candidate > 0) \{
+        r <- \hlfunctioncall{g}(candidate)/\hlfunctioncall{g}(out[i - 1])
+        \hlfunctioncall{if} (r > \hlfunctioncall{runif}(1, 0, 1)) \{
+            out[i] <- candidate
+            counter <- counter + 1
+        \}
+    \}
+\}
+\hlfunctioncall{message}(counter/samples)  \hlcomment{# should be about 24-40}
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\textcolor{messagecolor}{\#\# 0.3285}}\begin{alltt}
+\hlfunctioncall{plot}(out, type = \hlstring{"l"}, main = \hlstring{"Trace Plot"})
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.4\textwidth]{figure/graphic-metropolisSampler} 
+
+}
+
+
+
+\end{knitrout}
+
+Trace Plot looks good
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+xx <- \hlfunctioncall{seq}(0, 50, length = 1e+05)
+k <- 4 * \hlfunctioncall{gamma}(4) * 3^3
+\hlcomment{# Plot the exact distribution}
+\hlfunctioncall{plot}(xx, \hlfunctioncall{g}(xx)/k, lwd = 2, col = \hlstring{"blue"})
+\hlcomment{# curve(.25*dgamma(x, shape=2, scale=3)+.75*dgamma(x, shape=4, scale=3),}
+\hlcomment{# add=TRUE, col='blue') Both of these should produce the same line}
+
+\hlfunctioncall{lines}(\hlfunctioncall{density}(out), lwd = 2)
+
+\hlcomment{# Exact Mean}
+0.25 * (2 * 3) + 0.75 * (4 * 3)
+\end{alltt}
+\begin{verbatim}
+## [1] 10.5
+\end{verbatim}
+\begin{alltt}
+
+\hlcomment{# Approximate Mean}
+\hlfunctioncall{mean}(out)
+\end{alltt}
+\begin{verbatim}
+## [1] 10.35
+\end{verbatim}
+\end{kframe}
+
+{\centering \includegraphics[width=.4\textwidth]{figure/graphic-MetropolisSamplerPosteriorPlot} 
+
+}
+
+
+
+\end{knitrout}
+
+% subsubsection metropolis_code (end)
+% subsection metropolis_sampler (end)
+% section bayesian_methodology (end)
+\renewcommand{\dateTaken}{January 10, 2013}
+\daysep
+
+Paul Sabin --- Stat 451 TA\\
+Tuesday 2:30-4:00\\
+Friday: 9:30-11:00\\
+Office: 233\\
+Email:\href{mailto:r.paul.sabin@gmail.com}{r.paul.sabin@gmail.com}
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcomment{# For Winbugs}
+\hlfunctioncall{install.packages}(\hlstring{"ARM"}, \hlstring{"R2WinBUGS"})
+
+\hlcomment{# For jags}
+\hlfunctioncall{install.packages}(\hlstring{"R2jags"})
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+
+\section{Two Sample $t$ test} % (fold)
+\label{sec:two_sample_t_test}
+
+\begin{align*}
+y \sim \mathcal{N}(\mu, \sigma^2)\quad i=1,2\\
+f(\mu_1)=\mathcal{N}(\mu=0, \sigma^2=1000)
+f(\sigma^2)=\text{Unif}(0, 5000)
+\end{align*}
+% section two_sample_t_test (end)
+
+PROC MCMC two group $t$ test
+\begin{lstlisting}[language=SAS]
+data examp2;
+infile dataset;
+input tmt response;
+run;
+
+/*
+nmc: Number of Marcov Chains
+nbi: Number Burn in
+
+dic: information criteria
+*/
+proc mcmc data=examp2 outpost=post2 seed=1234 nmc=100000 nbi=5000
+                      statistics(alpha=.05)=(summary interval) thin=10
+                      moniter=( parms mudif varratio) propcov=quannew
+                      diagnostics=(all) dic ;
+array mu[2] mu1-mu2;
+arra sig2[2] sig21-sig22;
+prams: mu: sig2:;
+prior mu: ~ normal(0, sd=10000);
+prior sig21 ~ unif(9, 5000); /*  gamma(shape=30, scale=50) */
+prior sig22 ~ unif(9, 5000);
+mudif = mu1 - mu2;
+varratio = sig21/sig22;
+mm = mu[tmt];
+vv = sig2[tmt];
+model response ~ normal(mm, var=vv);
+run;
+
+proc export data=post2 outfile='twogroups.csv' dbms=csv replace;
+run;
+\end{lstlisting}
+
+\begin{description}
+    \item[HPD --- Highest Posterior Density] the smallest interval
+\end{description}
+
+Fischer variance problem --- a two sample $t$ test with unequal variances
+
+
+% <<engine='SAS'>>=
+% data foo;
+% input a b c;
+% datalines;
+% 1 2 3
+% 4 5 6
+% 7 8 9
+% ;
+% run;
+% @
+
+Check the posterior autocorolations
+
+\renewcommand{\dateTaken}{January 15, 2013}
+\daysep
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlfunctioncall{library}(rjags)
+\hlfunctioncall{library}(R2jags)
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+JAGS uses precisions, not variances. Precisions are $\frac{1}{\sigma^2}$
+
+\lstinputlisting[language=R]{code/TwoSampleJAGS.R}
+
+
+\renewcommand{\dateTaken}{January 17, 2013}
+\daysep
+
+You need to think about priors
+
+\section{Diagnostics} % (fold)
+\label{sec:diagnostics}
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlfunctioncall{library}(R2jags)
+mdl <- "
+    model \{
+        \hlfunctioncall{for} (i in 1:33) \{
+            y[i] ~ \hlfunctioncall{dnorm}(mu[tmt[i]], prec[tmt[i]])
+        \}
+
+        \hlfunctioncall{for} (i in 1:2) \{
+            mu[i] ~ \hlfunctioncall{dnorm}(0,0.000001)
+            vr[i] ~ \hlfunctioncall{dunif}(0,5000)
+            prec[i] <- 1/vr[i]
+        \}
+    \}
+"
+groups <- \hlfunctioncall{read.table}(\hlstring{"data/01twogroups.dat"}, col.names=\hlfunctioncall{c}(\hlstring{"tmt"}, \hlstring{"y"}))
+\hlfunctioncall{writeLines}(mdl, \hlstring{"code/twogroups.jags"})
+tmt <- groups$tmt
+y <- groups$y
+\hlcomment{# Data to go into jags}
+data.jags <- \hlfunctioncall{c}(\hlstring{'tmt'},\hlstring{'y'})
+\hlcomment{# what parameters to keep track of}
+parms <- \hlfunctioncall{c}(\hlstring{'mu'},\hlstring{'vr'})
+\hlcomment{# Initial Values}
+innts <- \hlfunctioncall{function}() \{\hlfunctioncall{list}(\hlstring{'mu'} = \hlfunctioncall{rnorm}(2,125,5), \hlstring{'vr'} = \hlfunctioncall{runif}(2,0,5000))\}
+twogroups.sim <- \hlfunctioncall{jags}(data=data.jags, parameters.to.save=parms, inits=innts, model.file=\hlstring{"code/twogroups.jags"},
+    n.iter=6000, n.burnin=1000, n.chains=1, n.thin=1)
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\textcolor{messagecolor}{\#\# module glm loaded}}\begin{verbatim}
+## Compiling model graph
+##    Resolving undeclared variables
+##    Allocating nodes
+##    Graph Size: 76
+## 
+## Initializing model
+\end{verbatim}
+\begin{alltt}
+
+twogroups.sim
+\end{alltt}
+\begin{verbatim}
+## Inference for Bugs model at "code/twogroups.jags", fit using jags,
+##  1 chains, each with 6000 iterations (first 1000 discarded)
+##  n.sims = 5000 iterations saved
+##          mu.vect sd.vect   2.5%    25%    50%    75%  97.5%
+## mu[1]     134.75   6.499 122.11 130.61 134.70 138.87  147.8
+## mu[2]     121.40   2.110 117.16 120.09 121.38 122.73  125.6
+## vr[1]     797.45 333.228 381.36 573.92 723.20 930.48 1659.5
+## vr[2]      63.12  31.741  26.22  41.34  55.22  76.11  146.2
+## deviance  271.55   3.652 266.96 268.84 270.74 273.37  280.5
+## 
+## DIC info (using the rule, pD = var(deviance)/2)
+## pD = 6.7 and DIC = 278.2
+## DIC is an estimate of expected predictive error (lower deviance is better).
+\end{verbatim}
+\begin{alltt}
+
+sims <- \hlfunctioncall{as.mcmc}(twogroups.sim)
+\hlfunctioncall{plot}(sims, auto.layout=FALSE, ask=FALSE)
+
+\hlcomment{# plot(sims[,2], type='l')}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-31} 
+\includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-32} 
+\includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-33} 
+\includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-34} 
+\includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-35} 
+\includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-36} 
+\includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-37} 
+\includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-38} 
+\includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-39} 
+\includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-310} 
+
+}
+
+
+
+\end{knitrout}
+
+
+First diagnostic: Look at your trace plot
+
+Second diagnostic: look at auto corilation
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlfunctioncall{autocorr}(sims)
+\end{alltt}
+\begin{verbatim}
+## , , deviance
+## 
+##         deviance      mu[1]     mu[2]      vr[1]      vr[2]
+## Lag 0   1.000000  0.0397216 -0.025591  0.5294713  0.5567647
+## Lag 1   0.009287  0.0178228 -0.001470 -0.0079258  0.0045190
+## Lag 5   0.008346  0.0222125 -0.004006  0.0258781  0.0005049
+## Lag 10 -0.003025  0.0082836 -0.023008  0.0244412 -0.0188622
+## Lag 50 -0.004687 -0.0007478 -0.009660 -0.0006706  0.0165176
+## 
+## , , mu[1]
+## 
+##        deviance      mu[1]     mu[2]      vr[1]     vr[2]
+## Lag 0  0.039722  1.0000000 -0.019048  0.0242092  0.013122
+## Lag 1  0.010297 -0.0176032 -0.018843 -0.0115282 -0.001713
+## Lag 5  0.009260  0.0203083 -0.010197  0.0290402 -0.001748
+## Lag 10 0.002206  0.0183513  0.048567 -0.0005999  0.015041
+## Lag 50 0.001726 -0.0001966  0.002256  0.0190355 -0.014390
+## 
+## , , mu[2]
+## 
+##         deviance      mu[1]     mu[2]     vr[1]     vr[2]
+## Lag 0  -0.025591 -0.0190482  1.000000 -0.002025 -0.017025
+## Lag 1  -0.007725 -0.0083044  0.016805 -0.021768  0.005684
+## Lag 5   0.030497 -0.0280916 -0.008886  0.010412  0.008702
+## Lag 10  0.015048 -0.0139730  0.026550  0.019316 -0.003001
+## Lag 50  0.010831  0.0004535 -0.001931 -0.006375  0.012813
+## 
+## , , vr[1]
+## 
+##         deviance     mu[1]     mu[2]     vr[1]     vr[2]
+## Lag 0   0.529471  0.024209 -0.002025  1.000000  0.006924
+## Lag 1   0.012432  0.008644  0.003187  0.013754  0.002647
+## Lag 5  -0.006325 -0.007802 -0.013119 -0.001014  0.001037
+## Lag 10 -0.001276 -0.022398 -0.016429  0.018451 -0.021251
+## Lag 50  0.020901 -0.010891 -0.008754  0.011124  0.031264
+## 
+## , , vr[2]
+## 
+##         deviance    mu[1]    mu[2]    vr[1]      vr[2]
+## Lag 0   0.556765 0.013122 -0.01702 0.006924  1.0000000
+## Lag 1  -0.002083 0.002571 -0.00108 0.004606  0.0085805
+## Lag 5   0.007769 0.018526 -0.01204 0.033278 -0.0131159
+## Lag 10  0.020122 0.035722 -0.01813 0.019459 -0.0003303
+## Lag 50 -0.019064 0.023849 -0.01956 0.001463 -0.0069104
+\end{verbatim}
+\begin{alltt}
+\hlfunctioncall{autocorr.plot}(sims)
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-4} 
+
+}
+
+
+
+\end{knitrout}
+
+
+A good autocorrelation plot shows the first bar being tall, but the rest being relatively small.
+
+Fourth diagnostic: Effective Sample size
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlfunctioncall{effectiveSize}(sims)
+\end{alltt}
+\begin{verbatim}
+## deviance    mu[1]    mu[2]    vr[1]    vr[2] 
+##     5000     5000     5000     5000     4840
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+these should be relatively close to the actual sample size
+
+fifth diagnostic: Raftery Lewis Diagnostic
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlfunctioncall{raftery.diag}(sims)
+\end{alltt}
+\begin{verbatim}
+## 
+## Quantile (q) = 0.025
+## Accuracy (r) = +/- 0.005
+## Probability (s) = 0.95 
+##                                                 
+##           Burn-in  Total Lower bound  Dependence
+##           (M)      (N)   (Nmin)       factor (I)
+##  deviance 2        3741  3746         0.999     
+##  mu[1]    2        3741  3746         0.999     
+##  mu[2]    2        3930  3746         1.050     
+##  vr[1]    2        3803  3746         1.020     
+##  vr[2]    2        3561  3746         0.951
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Check if you are within .005 (in the tails) with high probability
+
+Dependence Factor should be less than 5
+
+These five are the most commonly used, but there are others
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlfunctioncall{geweke.diag}(sims)
+\end{alltt}
+\begin{verbatim}
+## 
+## Fraction in 1st window = 0.1
+## Fraction in 2nd window = 0.5 
+## 
+## deviance    mu[1]    mu[2]    vr[1]    vr[2] 
+##  -0.6146  -1.7786  -0.8627   0.7567   0.1023
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Tests for drift in the samples. does something like a $t$ test on the first 10\% and the last 50\% of the chain.
+
+Heild
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlfunctioncall{heidel.diag}(sims)
+\end{alltt}
+\begin{verbatim}
+##                                        
+##          Stationarity start     p-value
+##          test         iteration        
+## deviance passed       1         0.822  
+## mu[1]    passed       1         0.140  
+## mu[2]    passed       1         0.398  
+## vr[1]    passed       1         0.684  
+## vr[2]    passed       1         0.636  
+##                                   
+##          Halfwidth Mean  Halfwidth
+##          test                     
+## deviance passed    271.5 0.1012   
+## mu[1]    passed    134.7 0.1802   
+## mu[2]    passed    121.4 0.0585   
+## vr[1]    passed    797.5 9.2366   
+## vr[2]    passed     63.1 0.8942
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+test of stationarity, or convergence
+
+both the stationarity and half width mean test should pass.
+
+
+Gelmen needs chains started at different points
+% section diagnostics (end)
+\renewcommand{\dateTaken}{January 22, 2013}
+\daysep
+\section{Posterior Predictives} % (fold)
+\label{sec:posterior_sredictives}
+Liklihood $g_{i1}\sim \mathcal{N}(\mu_1, \sigma^2_1$, $g_{i2}\sim \mathcal{N}(\mu_2, \sigma^2_2$
+
+Get a new y by plugging the sampled values of the parameters into a random sampler for the likelihood
+\begin{lstlisting}
+ynew_1 <- rnorm(1,mu1[1],sigma1[1])
+\end{lstlisting}
+
+\begin{tabular}{ccccc}
+ $\mu_1$ & $\sigma^2_1$ & $\mu_2$ & $\sigma^2_2$ & $y_{\text{new}1}$\\
+ \vdots & \vdots & \vdots & \vdots & \vdots
+\end{tabular}
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+ratios <- \hlfunctioncall{read.table}(\hlstring{"../Homework/01/monkeyratio.dat"})[,1]
+\hlfunctioncall{library}(R2jags)
+N <- \hlfunctioncall{length}(ratios)
+
+mdl <- "
+    model \{
+        \hlfunctioncall{for} (i in 1:N) \{
+            ratios[i] ~ \hlfunctioncall{dbeta}(alpha, beta)
+        \}
+
+        alpha ~ \hlfunctioncall{dgamma}(5, .025)
+        beta ~ \hlfunctioncall{dgamma}(5, .025)
+    \}
+"
+\hlfunctioncall{writeLines}(mdl, \hlstring{"code/hw1.jags"})
+
+jags.data <- \hlfunctioncall{c}(\hlstring{"ratios"}, \hlstring{"N"})
+jags.params <- \hlfunctioncall{c}(\hlstring{"alpha"}, \hlstring{"beta"})
+jags.inits <- \hlfunctioncall{function}() \{
+    \hlfunctioncall{list}(\hlstring{'alpha'} <- \hlfunctioncall{rgamma}(5,.025), \hlstring{'beta'} <- \hlfunctioncall{rgamma}(5,.025))
+\}
+\hlfunctioncall{set.seed}(5487)
+
+ratios.sim <- \hlfunctioncall{jags}(data=jags.data,
+                   parameters.to.save=jags.params,
+\hlcomment{                   # inits=jags.inits,}
+                   model.file=\hlstring{"code/hw1.jags"},
+                   n.iter=6000, n.burnin=1000, n.chains=1, n.thin=1)
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\textcolor{messagecolor}{\#\# module glm loaded}}\begin{verbatim}
+## Compiling model graph
+##    Resolving undeclared variables
+##    Allocating nodes
+##    Graph Size: 10
+## 
+## Initializing model
+\end{verbatim}
+\begin{alltt}
+
+sims <- \hlfunctioncall{as.mcmc}(ratios.sim)
+
+\hlcomment{# autocorr.plot(sims)}
+alpha <- sims[,1]
+beta <- sims[,2]
+ynew <- \hlfunctioncall{rbeta}(10000,alpha,beta)
+
+\hlcomment{# Plot of the density of the mean and the posterior predictive}
+\hlfunctioncall{plot}(\hlfunctioncall{density}(alpha/(alpha+beta)), xlim=\hlfunctioncall{c}(.6,.9))
+\hlfunctioncall{lines}(\hlfunctioncall{density}(ynew), col=\hlstring{'blue'}) \hlcomment{# Plot of the posterior predictive}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-9} 
+
+}
+
+
+
+\end{knitrout}
+
+
+ We don't make up data we get it from ``Pedagogically flexible data acquisition.''---Dr Tolly.
+
+
+You can use other priors, they just may not be as easy for example:
+
+
+% section posterior_predictives (end)
+\section{Linear Regression} % (fold)
+\label{sec:linear_regression}
+Likelihood \[ y_{i} ~ \mathcal{N}(\mu_{i}, \sigma^2)\]
+
+The mean is different for every data point, but the variance is constant.
+
+\begin{align*}
+    \mu_1 \leftarrow \beta_{0} + \beta_{1} x\\
+    \beta_{0} \sim \mathcal{N}(,\tau=.001)\\
+    \beta_{1} \sim \mathcal{N}(\mu=0,\tau=.001)\\
+    \sigma^{2} \sim \\
+\end{align*}
+\renewcommand{\dateTaken}{January 24, 2013}
+\daysep
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+jags.modelfile <- \hlstring{"code/linreg.jags"}
+mdl <- \hlstring{"\textbackslash{}nmodel \{\textbackslash{}\hlfunctioncall{nfor} (i in 1:N) \{\textbackslash{}ny[i] ~ \hlfunctioncall{dnorm}(mu[i], prec)\textbackslash{}nmu[i] <- beta_0 + beta_1 * x[i]\textbackslash{}n\}\textbackslash{}\hlfunctioncall{ninvisible}(\textbackslash{}"}.BeGiN_TiDy_IdEnTiFiEr_HaHaHa.HaHaHa_EnD_TiDy_IdEnTiFiEr\textbackslash{}\hlstring{")\textbackslash{}nbeta_0 ~ \hlfunctioncall{dnorm}(0, .00001)\textbackslash{}nbeta_1 ~ \hlfunctioncall{dnorm}(0, .001)\textbackslash{}nsigma2 ~ \hlfunctioncall{dgamma}(1.1, .5)\textbackslash{}nprec <- 1/sigma2\textbackslash{}n\}\textbackslash{}n"}
+\hlfunctioncall{writeLines}(mdl, \hlstring{"code/linreg.jags"})
+
+
+linregdata <- \hlfunctioncall{read.table}(\hlstring{"data/02linreg.dat"}, col.names = \hlfunctioncall{c}(\hlstring{"lotsize"}, \hlstring{"manhours"}))
+N <- \hlfunctioncall{nrow}(linregdata)
+y <- linregdata[, 2]
+x <- linregdata[, 1]
+jags.data <- \hlfunctioncall{c}(\hlstring{"y"}, \hlstring{"x"}, \hlstring{"N"})
+jags.params <- \hlfunctioncall{c}(\hlstring{"beta_0"}, \hlstring{"beta_1"}, \hlstring{"sigma2"})
+
+
+\hlfunctioncall{set.seed}(5487)
+linreg.sim <- \hlfunctioncall{jags}(data = jags.data, parameters.to.save = jags.params, model.file = \hlstring{"code/linreg.jags"}, 
+    n.iter = 10000, n.burnin = 5000, n.chains = 1, n.thin = 1)
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\textcolor{messagecolor}{\#\# module glm loaded}}
+
+{\ttfamily\noindent\bfseries\textcolor{errorcolor}{\#\# Error: \\\#\# Error parsing model file:\\\#\# syntax error on line 7 near """}}\begin{alltt}
+linreg.sim
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\textcolor{errorcolor}{\#\# Error: object 'linreg.sim' not found}}\end{kframe}
+\end{knitrout}
+
+
+Let's check for convergence
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+sims <- \hlfunctioncall{as.mcmc}(linreg.sim)
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\textcolor{errorcolor}{\#\# Error: object 'linreg.sim' not found}}\begin{alltt}
+\hlcomment{# Trace Plots}
+\hlfunctioncall{plot}(sims, auto.layout = FALSE, ask = FALSE)
+\hlcomment{# Autocorrelation plots}
+\hlfunctioncall{autocorr.plot}(sims, ask = FALSE)
+\hlfunctioncall{effectiveSize}(sims)
+\end{alltt}
+\begin{verbatim}
+##    alpha     beta deviance 
+##     5000     5000     5000
+\end{verbatim}
+\begin{alltt}
+\hlfunctioncall{raftery.diag}(sims)
+\end{alltt}
+\begin{verbatim}
+## 
+## Quantile (q) = 0.025
+## Accuracy (r) = +/- 0.005
+## Probability (s) = 0.95 
+##                                                 
+##           Burn-in  Total Lower bound  Dependence
+##           (M)      (N)   (Nmin)       factor (I)
+##  alpha    2        3741  3746         0.999     
+##  beta     2        3680  3746         0.982     
+##  deviance 2        3680  3746         0.982
+\end{verbatim}
+\end{kframe}
+
+{\centering \includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-121} 
+\includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-122} 
+\includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-123} 
+\includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-124} 
+\includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-125} 
+\includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-126} 
+\includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-127} 
+
+}
+
+
+
+\end{knitrout}
+
+
+Here's the frequentest method for an ANOVA
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+fit.1 <- \hlfunctioncall{lm}(y ~ x)
+\hlfunctioncall{anova}(fit.1)
+\end{alltt}
+\begin{verbatim}
+## Analysis of Variance Table
+## 
+## Response: y
+##           Df Sum Sq Mean Sq F value Pr(>F)    
+## x          1  13600   13600    1813  1e-10 ***
+## Residuals  8     60       7                   
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+
+to check the value of the slope
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+beta0 <- sims[, 1]
+beta1 <- sims[, 2]
+sigma2 <- sims[, 4]
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\textcolor{errorcolor}{\#\# Error: subscript out of bounds}}\begin{alltt}
+
+\hlcomment{# Probability slope is greater than 0}
+\hlfunctioncall{mean}(beta1 > 0)
+\end{alltt}
+\begin{verbatim}
+## [1] 1
+\end{verbatim}
+\begin{alltt}
+
+\hlcomment{# Plot the density of the slope of the line}
+\hlfunctioncall{plot}(\hlfunctioncall{density}(beta1))
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-14} 
+
+}
+
+
+
+\end{knitrout}
+
+
+Plot of regression
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlfunctioncall{plot}(x, y, pch = 20)
+\hlfunctioncall{abline}(\hlfunctioncall{mean}(beta0), \hlfunctioncall{mean}(beta1))
+xx <- \hlfunctioncall{seq}(\hlfunctioncall{min}(x), \hlfunctioncall{max}(x), by = 0.01)
+
+ans <- beta0 + \hlfunctioncall{outer}(beta1, xx, \hlstring{"*"})
+\hlfunctioncall{lines}(xx, \hlfunctioncall{apply}(ans, 2, quantile, 0.025), col = \hlstring{"blue"})
+\hlfunctioncall{lines}(xx, \hlfunctioncall{apply}(ans, 2, quantile, 0.975), col = \hlstring{"blue"})
+
+\hlcomment{# generate a new data set with the first set of}
+\hlfunctioncall{points}(xx, beta0[1] + beta1[1] * xx + \hlfunctioncall{rnorm}(\hlfunctioncall{length}(xx), 0, \hlfunctioncall{sqrt}(sigma2[1])), pch = 20)
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\textcolor{errorcolor}{\#\# Error: object 'sigma2' not found}}\end{kframe}
+
+{\centering \includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-15} 
+
+}
+
+
+
+\end{knitrout}
+
+
+Homework Plot the prediction interval from the problem in class
+
+generate a normal using  ans each ans and sigma
+% section linear_regression (end)
+\renewcommand{\dateTaken}{January 29, 2013}
+\daysep
+\section{Multiple Linear Regression} % (fold)
+\label{sec:multiple_linear_regression}
+\lstinputlisting[language=SAS]{code/MultipleRegression.sas}
+Raftery-lewis diagnostics should be less than 5.
+
+Let the variance increase proportionaly with the $x$s
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+vo2 <- \hlfunctioncall{read.table}(\hlstring{"data/03vo2.dat"}, skip = 1, col.names = \hlfunctioncall{c}(\hlstring{"ID"}, \hlstring{"Gender"}, \hlstring{"Age1"}, 
+    \hlstring{"BMI"}, \hlstring{"MPH"}, \hlstring{"HR"}, \hlstring{"RPE"}, \hlstring{"MaxVO2ML"}))
+\hlfunctioncall{plot}(vo2$MPH, vo2$MaxVO2ML)
+\hlfunctioncall{plot}(vo2$BMI, vo2$MaxVO2ML)
+\hlfunctioncall{plot}(vo2$Gender, vo2$MaxVO2ML)
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-161} 
+\includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-162} 
+\includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-163} 
+
+}
+
+
+
+\end{knitrout}
+
+
+
+DIC Deviance information criteria (calculated in formula~\ref{eq:deviance})
+\begin{align} \label{eq:deviance}
+    \text{deviance} = -2\log(\mathcal{L})
+\end{align}
+
+\renewcommand{\dateTaken}{January 31, 2013}
+\daysep
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcomment{# Using the VO2 Data}
+N <- \hlfunctioncall{nrow}(vo2)
+mdl <- '
+model \{
+    \hlfunctioncall{for}( i in 1:N)\{
+        y[i] ~ \hlfunctioncall{dnorm}(mu[i], prec)
+        mu[i] <- b_0 +
+                 b_gen*gender[i] +
+                 b_bmi*bmi[i] +
+                 b_mph*mph[i] +
+                 b_hr*hr[i] +
+                 b_rpe*rpe[i] +
+\hlcomment{                 # b_gen_bmi*gen_bmi[i] +}
+\hlcomment{                 # b_gen_mph*gen_mph[i] +}
+\hlcomment{                 # b_gen_hr*gen_hr[i] +}
+\hlcomment{                 # b_gen_rpe*gen_rpe[i] +}
+\hlcomment{                 # b_bmi_mph*bmi_mph[i] +}
+\hlcomment{                 # b_bmi_hr*bmi_hr[i] +}
+\hlcomment{                 # b_bmi_rpe*bmi_rpe[i] +}
+                 b_mph_hr*mph_hr[i] \hlcomment{# +}
+\hlcomment{                 # b_mph_rpe*mph_rpe[i] +}
+\hlcomment{                 # b_hr_rpe*hr_rpe[i]}
+    \}
+
+    b_0   ~ \hlfunctioncall{dnorm}(0, .00001);
+    b_gen ~ \hlfunctioncall{dnorm}(0, .001);
+    b_bmi ~ \hlfunctioncall{dnorm}(0, .001);
+    b_mph ~ \hlfunctioncall{dnorm}(0, .001);
+    b_hr  ~ \hlfunctioncall{dnorm}(0, .001);
+    b_rpe ~ \hlfunctioncall{dnorm}(0, .001);
+
+\hlcomment{    # b_gen_bmi ~ dnorm(0, .001);}
+\hlcomment{    # b_gen_mph ~ dnorm(0, .001);}
+\hlcomment{    # b_gen_hr  ~ dnorm(0, .001);}
+\hlcomment{    # b_gen_rpe ~ dnorm(0, .001);}
+\hlcomment{    # b_bmi_mph ~ dnorm(0, .001);}
+\hlcomment{    # b_bmi_hr  ~ dnorm(0, .001);}
+\hlcomment{    # b_bmi_rpe ~ dnorm(0, .001);}
+    b_mph_hr  ~ \hlfunctioncall{dnorm}(0, .001);
+\hlcomment{    # b_mph_rpe ~ dnorm(0, .001);}
+\hlcomment{    # b_hr_rpe  ~ dnorm(0, .001);}
+
+    vr ~ \hlfunctioncall{dgamma}(2, .05)
+    prec <- 1/vr
+\}
+'
+\hlfunctioncall{writeLines}(mdl, \hlstring{"code/multipleRegression.jags"})
+
+y <- vo2[,8]
+gender <- vo2[,2]
+bmi <- vo2[,4]
+hr <- vo2[,6]
+mph <- vo2[,5]
+rpe <- vo2[,7]
+
+\hlcomment{# gen_bmi <- gender*bmi}
+\hlcomment{# gen_hr <- gender*hr}
+\hlcomment{# gen_mph <- gender*mph}
+\hlcomment{# gen_rpe <- gender*rpe}
+\hlcomment{# bmi_mph <- bmi*mph}
+\hlcomment{# bmi_hr <- bmi*hr}
+\hlcomment{# bmi_rpe <- bmi*rpe}
+mph_hr <- mph*hr
+\hlcomment{# mph_rpe <- mph*rpe}
+\hlcomment{# hr_rpe <- hr*rpe}
+
+jags.data <- \hlfunctioncall{c}(
+\hlstring{"N"},
+\hlstring{"y"},
+\hlstring{"gender"},
+\hlstring{"bmi"},
+\hlstring{"hr"},
+\hlstring{"mph"},
+\hlstring{"rpe"},
+\hlcomment{# "gen_bmi",}
+\hlcomment{# "gen_hr",}
+\hlcomment{# "gen_mph",}
+\hlcomment{# "gen_rpe",}
+\hlcomment{# "bmi_mph",}
+\hlcomment{# "bmi_hr" #,}
+\hlcomment{# "bmi_rpe",}
+\hlstring{"mph_hr"} #,
+\hlcomment{# "mph_rpe",}
+\hlcomment{# "hr_rpe",}
+)
+jags.params <- \hlfunctioncall{c}(
+\hlstring{"b_0"},
+\hlstring{"b_gen"},
+\hlstring{"b_bmi"},
+\hlstring{"b_hr"},
+\hlstring{"b_mph"},
+\hlstring{"b_rpe"},
+\hlcomment{# "b_gen_bmi",}
+\hlcomment{# "b_gen_hr",}
+\hlcomment{# "b_gen_mph",}
+\hlcomment{# "b_gen_rpe",}
+\hlcomment{# "b_bmi_mph",}
+\hlcomment{# "b_bmi_hr",}
+\hlcomment{# "b_bmi_rpe",}
+\hlstring{"b_mph_hr"},
+\hlcomment{# "b_mph_rpe",}
+\hlstring{"vr"}
+)
+
+\hlfunctioncall{set.seed}(1234)
+multr.sim <- \hlfunctioncall{jags}(data=jags.data,
+                   parameters.to.save=jags.params,
+                   model.file=\hlstring{"code/multipleRegression.jags"},
+                   n.iter=10000, n.burnin=5000, n.chains=1, n.thin=1)
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\textcolor{messagecolor}{\#\# module glm loaded}}\begin{verbatim}
+## Compiling model graph
+##    Resolving undeclared variables
+##    Allocating nodes
+##    Graph Size: 1294
+## 
+## Initializing model
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+
+\begin{tabular}{cc}
+Full & 756.4\\
+-hr & 764.4\\
+-rpe & 759.2\\
++ all two way interactions & 766.7\\
+\end{tabular}
+
+\begin{align*}
+    IC= -2\log(\mathcal{L}) + \text{penalty}(\text{parameters})\\
+    \text{Deviance} = -2 \log(\mathcal{L})\\
+    DIC = -2\log(\mathcal{L}) + pD\\
+    pD = \frac{\text{VAR}(\text{deviance})}{2}
+\end{align*}
+% section multiple_linear_regression (end)
+\section{ANOVA} % (fold)
+\label{sec:anova}
+Cell means model of ANOVA
+
+
+\begin{tabular}{c|c|c|c}
+Treatement 1& Treatement 2 & Treatement 3 & Treatement 4\\
+\hline
+$y_{11}$ & $y_{21}$ & $y_{31}$ & $y_{41}$ \\
+$y_{12}$ & $y_{22}$ & $y_{32}$ & $y_{42}$ \\
+$y_{13}$ & $y_{23}$ & $y_{33}$ & $y_{43}$ \\
+$y_{14}$ & $y_{24}$ & $y_{34}$ & $y_{44}$ \\
+\end{tabular}
+
+so given this data we say that
+$y_{1}\sim \mathrm{N}(\mu,\sigma^{2})$
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+anova <- \hlfunctioncall{read.table}(\hlstring{"data/04anova.dat"} ,col.names=\hlfunctioncall{c}(\hlstring{"tmt"},\hlstring{"response"},\hlstring{"tmt1"}))
+N <- \hlfunctioncall{nrow}(anova)
+mdl <- 'model \{
+\hlcomment{    # Likelihood}
+    \hlfunctioncall{for} (i in 1:N)\{
+        response[i] ~ \hlfunctioncall{dnorm}(mu[tmt[i]], prec)
+    \}
+
+\hlcomment{    # Create priors for each treatment}
+    \hlfunctioncall{for}(i in 1:4)\{
+        mu[i] ~ \hlfunctioncall{dnorm}(15,.0001)
+    \}
+    prec <- 1/vv
+    vv ~ \hlfunctioncall{dgamma}(1.1,.1)
+\}
+'
+\hlfunctioncall{writeLines}(mdl, \hlstring{"code/ANOVAmodel.jags"})
+response <- anova$response
+tmt <- anova$tmt
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+jags.data <- \hlfunctioncall{c}(\hlstring{"N"}, \hlstring{"response"}, \hlstring{"tmt"})
+jags.params <- \hlfunctioncall{c}(\hlstring{"mu"}, \hlstring{"vv"})
+anova.sim <- \hlfunctioncall{jags}(data = jags.data, parameters.to.save = jags.params, model.file = \hlstring{"code/ANOVAmodel.jags"}, 
+    n.iter = 12000, n.chains = 1, n.thin = 1)
+\end{alltt}
+\begin{verbatim}
+## Compiling model graph
+##    Resolving undeclared variables
+##    Allocating nodes
+##    Graph Size: 68
+## 
+## Initializing model
+\end{verbatim}
+\begin{alltt}
+sims <- \hlfunctioncall{as.mcmc}(anova.sim)
+\hlfunctioncall{plot}(sims, auto.layout = FALSE, ask = FALSE)
+\hlfunctioncall{autocorr.plot}(sims)
+\hlfunctioncall{raftery.diag}(sims)
+\end{alltt}
+\begin{verbatim}
+## 
+## Quantile (q) = 0.025
+## Accuracy (r) = +/- 0.005
+## Probability (s) = 0.95 
+##                                                 
+##           Burn-in  Total Lower bound  Dependence
+##           (M)      (N)   (Nmin)       factor (I)
+##  deviance 2        3761  3746         1.00      
+##  mu[1]    2        3710  3746         0.99      
+##  mu[2]    2        3761  3746         1.00      
+##  mu[3]    2        3761  3746         1.00      
+##  mu[4]    2        3813  3746         1.02      
+##  vv       3        4028  3746         1.08
+\end{verbatim}
+\begin{alltt}
+\hlfunctioncall{effectiveSize}(sims)
+\end{alltt}
+\begin{verbatim}
+## deviance    mu[1]    mu[2]    mu[3]    mu[4]       vv 
+##     6448     6000     6000     6000     5800     6000
+\end{verbatim}
+\end{kframe}
+
+{\centering \includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-191} 
+\includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-192} 
+\includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-193} 
+\includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-194} 
+\includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-195} 
+\includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-196} 
+\includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-197} 
+\includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-198} 
+\includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-199} 
+\includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-1910} 
+\includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-1911} 
+\includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-1912} 
+\includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-1913} 
+
+}
+
+
+
+\end{knitrout}
+
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+mdl <- 'model \{
+\hlcomment{    # Likelihood}
+    \hlfunctioncall{for} (i in 1:N)\{
+        response[i] ~ \hlfunctioncall{dnorm}(mu[tmt[i]], prec[tmt[i]])
+    \}
+
+\hlcomment{    # Create priors for each treatment}
+    \hlfunctioncall{for}(i in 1:4)\{
+        mu[i] ~ \hlfunctioncall{dnorm}(15,.0001)
+        prec[i] <- 1/vv[i]
+        vv[i] ~ \hlfunctioncall{dgamma}(1.1,.1)
+    \}
+\}
+'
+\hlfunctioncall{writeLines}(mdl, \hlstring{"code/ANOVAmodelNCvariance.jags"})
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+si
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\textcolor{errorcolor}{\#\# Error: object 'si' not found}}\end{kframe}
+\end{knitrout}
+
+
+Devience is the -2*log likelihood
+
+\subsection{Compare Means} % (fold)
+\label{sub:compare_means}
+We don't care about multiple test becasue we are not under the constraint of a null hypothisis
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+diff12 <- sims[, 2] - sims[, 3]
+\hlfunctioncall{mean}(dif12 > 0)
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\textcolor{errorcolor}{\#\# Error: object 'dif12' not found}}\begin{alltt}
+dif13 <- sims[, 2] - sims[, 4]
+dif14 <- sims[, 2] - sims[, 5]
+dif23 <- sims[, 3] - sims[, 4]
+dif24 <- sims[, 3] - sims[, 5]
+dif34 <- sims[, 4] - sims[, 5]
+\hlfunctioncall{mean}(dif13 > 0)
+\end{alltt}
+\begin{verbatim}
+## [1] 0.9958
+\end{verbatim}
+\begin{alltt}
+\hlfunctioncall{mean}(dif14 > 0)
+\end{alltt}
+\begin{verbatim}
+## [1] 0.9277
+\end{verbatim}
+\begin{alltt}
+\hlfunctioncall{mean}(dif23 > 0)
+\end{alltt}
+\begin{verbatim}
+## [1] 1
+\end{verbatim}
+\begin{alltt}
+\hlfunctioncall{mean}(dif24 > 0)
+\end{alltt}
+\begin{verbatim}
+## [1] 0.9995
+\end{verbatim}
+\begin{alltt}
+\hlfunctioncall{mean}(dif34 > 0)
+\end{alltt}
+\begin{verbatim}
+## [1] 0.08267
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+% subsection compare_means (end)
+
+Two by three factorial design.
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+twoway <- \hlfunctioncall{read.table}(\hlstring{"data/05twoway.dat"}, col.names = \hlfunctioncall{c}(\hlstring{"block"}, \hlstring{"seedType"}, \hlstring{"inoculate"}, 
+    \hlstring{"yield"}))
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+Using cell means method
+
+Table should be rotated
+\begin{tabular}{c|cc|c}
+ & a & b & \\
+ \hline
+dea & $\mu_{11}$ & $\mu_{12}$ & $\mu_{1\cdot}$\\
+con & $\mu_{21}$ & $\mu_{22}$ & $\mu_{2\cdot}$\\
+liv & $\mu_{31}$ & $\mu_{22}$ & $\mu_{3\cdot}$\\
+\hline
+    & $\mu_{\cdot 1}$ & $\mu_{\cdot 2}$ & \\
+\end{tabular}
+
+Degrees of freedom is 5, one for type, two for inoculate, and two for interaction
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+y <- \hlfunctioncall{as.numeric}(twoway$seedType)
+
+mdl <- '
+model \{
+    \hlfunctioncall{for} (i in 1:24) \{
+        yield[i] ~ \hlfunctioncall{dnorm}(mu[ncult[i],ninoc[i]], 1/vv)
+    \}
+
+    \hlfunctioncall{for} (i in 1:2) \{
+        \hlfunctioncall{for} (j in 1:3) \{
+            mu[i,j] ~ \hlfunctioncall{dnorm}(0, .000001)
+        \}
+    \}
+
+    vv ~ \hlfunctioncall{dgamma}(1.5, .1)
+\}
+'
+
+\hlfunctioncall{writeLines}(mdl, \hlstring{'code/CultModel.jags'})
+
+yield <- twoway$yield
+ncult <- \hlfunctioncall{as.numeric}(twoway$seedType)
+ninoc <- \hlfunctioncall{as.numeric}(twoway$inoculate)
+
+jags.data <- \hlfunctioncall{c}(\hlstring{'yield'}, \hlstring{'ncult'}, \hlstring{'ninoc'})
+jags.params <- \hlfunctioncall{c}(\hlstring{'mu'},\hlstring{'vv'})
+
+innits <- \hlfunctioncall{function}()\{\hlfunctioncall{list}(\hlstring{'mu'}= \hlfunctioncall{matrix}(0,2,3), \hlstring{'vv'}, 15)\}
+
+cult1.jags <- \hlfunctioncall{jags}( data=jags.data,
+\hlcomment{                    # inits=innits,}
+                    parameters.to.save=jags.params,
+                    model.file=\hlstring{'code/CultModel.jags'},
+                    n.iter=12000, n.burnin=2000,
+                    n.chains=1, n.thin=1)
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\textcolor{messagecolor}{\#\# module glm loaded}}\begin{verbatim}
+## Compiling model graph
+##    Resolving undeclared variables
+##    Allocating nodes
+##    Graph Size: 85
+## 
+## Initializing model
+\end{verbatim}
+\begin{alltt}
+cult1.sim <- \hlfunctioncall{as.mcmc}(cult1.jags)
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+
+Effects model and cell means model are two different ways to do analysis of variance. BYU was a pioneer of the cell means model.
+
+\subsection{ANOVA Marginal Means} % (fold)
+\label{sub:anova_marginal_means}
+
+marginals are calculated as $\mu_{1\cdot} = \frac{\mu_{11} + \mu_{12} + \mu_{13}}{3}$
+its just a mean of the means
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+mu1dot <- (cult1.sim[, 2] + cult1.sim[, 4] + cult1.sim[, 6])/3
+mu2dot <- (cult1.sim[, 3] + cult1.sim[, 5] + cult1.sim[, 7])/3
+
+\hlfunctioncall{plot}(mu1dot - mu2dot)
+\hlfunctioncall{mean}(mu2dot - mu1dot > 0)
+\end{alltt}
+\begin{verbatim}
+## [1] 0.8171
+\end{verbatim}
+\begin{alltt}
+
+mudot1 <- (cult1.sim[, 2] + cult1.sim[, 3])/2
+mudot2 <- (cult1.sim[, 4] + cult1.sim[, 5])/2
+mudot3 <- (cult1.sim[, 6] + cult1.sim[, 7])/2
+
+\hlfunctioncall{mean}(mudot1 - mudot2 < 0)  \hlcomment{# Probability mu_dot2 is bigger than mu_dot1}
+\end{alltt}
+\begin{verbatim}
+## [1] 0.9858
+\end{verbatim}
+\begin{alltt}
+\hlfunctioncall{mean}(mudot3 - mudot2 > 0)  \hlcomment{# Probability mu_dot3 is bigger than mu_dot2}
+\end{alltt}
+\begin{verbatim}
+## [1] 0.9991
+\end{verbatim}
+\end{kframe}
+
+{\centering \includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-25} 
+
+}
+
+
+
+\end{knitrout}
+
+% subsection anova_marginal_means (end)
+\subsection{ANOVA Interactions} % (fold)
+\label{sub:anova_interactions}
+interactions are tested in four cell groups the formula is
+\begin{align*}
+    \mu_{11}-\mu_{21} = \mu_{12}-\mu_{22}\\
+    \mu_{11}-\mu_{21} - \mu_{12}+\mu_{22} = 0
+\end{align*}
+
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+int1 <- cult1.sim[, 2] - cult1.sim[, 4] - cult1.sim[, 3] - cult1.sim[, 4]
+int2 <- cult1.sim[, 4] - cult1.sim[, 6] - cult1.sim[, 5] + cult1.sim[, 7]
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+% subsection anova_interactions (end)
+
+Finally, compare to seed types that with the best inoculate, does it make sense to pay for the better seed or does the $\mu_{11}-\mu_{21} = \mu_{12}-\mu_{22}$ come from the inoculate
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+se1 <- cult1.sim[, 6] - cult1.sim[, 7]
+\hlfunctioncall{mean}(se1 < 0)
+\end{alltt}
+\begin{verbatim}
+## [1] 0.6194
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\subsection{Linear Algebra Solution} % (fold)
+\label{sec:linear_algebra_solution}
+% \begin{align*}
+%     \begin{bmatrix}
+%         27.4\\
+%         29.7\\
+%         34.5\\
+%     \end{bmatrix}
+%      =
+%      \begin{bmatrix}
+%      \end{bmatrix}
+% \end{align*}
+
+\[
+\underline{\hat{\mu}} = (W' W)^{-1} W' \underline{y}
+\]
+Least Squares Solution
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+w <- \hlfunctioncall{rbind}(\hlfunctioncall{diag}(1, 6), \hlfunctioncall{diag}(1, 6), \hlfunctioncall{diag}(1, 6), \hlfunctioncall{diag}(1, 6))
+muhat <- \hlfunctioncall{solve}(\hlfunctioncall{t}(w) %*% w) %*% \hlfunctioncall{t}(w) %*% twoway$yield
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+
+\begin{align*}
+    y=W\mu\\
+    y=WI\mu\\
+    y= \underbrace{WA^{-1}}_{X} \underbrace{A\mu}_{\beta}
+\end{align*}
+
+
+\begin{align*}
+\begin{bmatrix}
+    \frac{1}{6} & \frac{1}{6}& \frac{1}{6}& \frac{1}{6}& \frac{1}{6}& \frac{1}{6}\\
+    \frac{1}{6} & \frac{1}{6}& \frac{1}{6}& \frac{1}{6}& \frac{1}{6}& \frac{1}{6}\\
+    \frac{1}{2} & -\frac{1}{2}& 0& \frac{1}{2}& -\frac{1}{2}& 0\\
+    0&\frac{1}{2} & -\frac{1}{2}& 0&\frac{1}{2}& -\frac{1}{2}\\
+    1 & -1 & 0 & -1 & 1 & 0\\
+    0 & 1 & -1 & 0 & -1 & 1\\
+\end{bmatrix}
+\begin{bmatrix}
+    \mu_{11}\\
+    \mu_{12}\\
+    \mu_{13}\\
+    \mu_{21}\\
+    \mu_{22}\\
+    \mu_{23}\\
+\end{bmatrix}
+=
+\begin{bmatrix}
+    \mu_{\cdot\cdot}\\
+    \mu_{1\cdot} - \mu_{2\cdot}\\
+    \mu_{\cdot1} - \mu_{\cdot2}\\
+    \mu_{\cdot2} - \mu_{\cdot3}\\
+    \mu_{11}  - \mu_{12} - \mu_{21}+ \mu_{22}\\
+    \mu_{12}  - \mu_{13} - \mu_{22}+ \mu_{23}\\
+\end{bmatrix}
+\end{align*}
+% subsection linear_algebra_solution (end)
+% section anova (end)
+\renewcommand{\dateTaken}{February 12, 2013}
+\daysep
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+dev <- \hlfunctioncall{function}(x) \{
+    fp <- \hlfunctioncall{length}(y) * \hlfunctioncall{log}(2* pi)
+    sp <-
+\}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\renewcommand{\dateTaken}{February 14, 2013}
+\daysep
+\section{Analysis of Covariance ANCOVA} % (fold)
+\label{sec:analysis_of_covariance_ancova}
+
+Join Me 777-129-200
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+ac <- \hlfunctioncall{read.table}(\hlstring{"data/06ancova.dat"}, header = TRUE)
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+
+First thing you do for analysis is plot the data
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlfunctioncall{plot}(ac$speed, ac$scrap, pch = ac$lines)
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-31} 
+
+}
+
+
+
+\end{knitrout}
+
+
+Let's try and come up with a model
+\begin{align}
+y_{i j} = \beta_{0} + \beta_{1}\cdot\text{Line} + \beta_{2}\cdot\text{Speed} + \beta_{3}\cdot \text{Line} \cdot \text{Speed}
+\end{align}
+
+Or we could do this
+\begin{align*}
+    y_{i j} = \beta_{0 i} + \beta_{1 i}\cdot\text{Speed}
+\end{align*}
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+mdl <- 'model \{
+    \hlfunctioncall{for}(i in 1:27) \{
+        scrap[i] ~ \hlfunctioncall{dnorm}(mu[i], prec);
+        mu[i] <- b_0[line[i]] + b_1[line[i]]*speed[i];
+    \}
+
+    \hlfunctioncall{for} (i in 1:2) \{
+        b_0[i] ~ \hlfunctioncall{dnorm}(30, .001);
+        b_1[i] ~ \hlfunctioncall{dnorm}(0, .01);
+    \}
+
+    vr ~ \hlfunctioncall{dgamma}(1.5, .0125);
+    prec <- 1/vr;
+\}
+'
+\hlfunctioncall{writeLines}(mdl, \hlstring{'code/ANCOVAModel.jags'})
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+prior for beta not covers 30*100
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+speed <- ac$speed
+line <- ac$line
+scrap <- ac$scrap
+jags.data <- \hlfunctioncall{c}(\hlstring{'speed'}, \hlstring{'line'}, \hlstring{'scrap'})
+jags.params <- \hlfunctioncall{c}(\hlstring{'b_0'},\hlstring{'b_1'}, \hlstring{'vr'})
+ancova.jags <- \hlfunctioncall{jags}( data=jags.data,
+\hlcomment{                    # inits=innits,}
+                    parameters.to.save=jags.params,
+                    model.file=\hlstring{'code/ANCOVAModel.jags'},
+                    n.iter=12000, n.burnin=2000,
+                    n.chains=1, n.thin=1)
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\textcolor{messagecolor}{\#\# module glm loaded}}\begin{verbatim}
+## Compiling model graph
+##    Resolving undeclared variables
+##    Allocating nodes
+##    Graph Size: 148
+## 
+## Initializing model
+\end{verbatim}
+\begin{alltt}
+ancova.jags
+\end{alltt}
+\begin{verbatim}
+## Inference for Bugs model at "code/ANCOVAModel.jags", fit using jags,
+##  1 chains, each with 12000 iterations (first 2000 discarded)
+##  n.sims = 10000 iterations saved
+##          mu.vect sd.vect    2.5%     25%     50%     75%   97.5%
+## b_0[1]    81.738  15.570  50.441  71.518  81.938  92.185 111.585
+## b_0[2]    13.553  16.417 -18.292   2.490  13.616  24.485  45.839
+## b_1[1]     1.218   0.074   1.079   1.168   1.217   1.266   1.365
+## b_1[2]     1.297   0.074   1.149   1.248   1.297   1.347   1.440
+## vr       363.557  85.792 229.893 302.708 351.820 411.422 569.708
+## deviance 241.252   3.179 236.996 238.870 240.626 242.949 249.002
+## 
+## DIC info (using the rule, pD = var(deviance)/2)
+## pD = 5.1 and DIC = 246.3
+## DIC is an estimate of expected predictive error (lower deviance is better).
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+
+Diagnostics
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+ancova.sim <- \hlfunctioncall{as.mcmc}(ancova.jags)
+\hlfunctioncall{plot}(ancova.sim, auto.layout = FALSE, ask = FALSE)
+\hlfunctioncall{autocorr.plot}(ancova.sim, auto.layout = FALSE, ask = FALSE)
+\hlfunctioncall{raftery.diag}(ancova.sim)
+\end{alltt}
+\begin{verbatim}
+## 
+## Quantile (q) = 0.025
+## Accuracy (r) = +/- 0.005
+## Probability (s) = 0.95 
+##                                                 
+##           Burn-in  Total Lower bound  Dependence
+##           (M)      (N)   (Nmin)       factor (I)
+##  b_0[1]   2        3650  3746         0.974     
+##  b_0[2]   2        3680  3746         0.982     
+##  b_1[1]   2        3680  3746         0.982     
+##  b_1[2]   2        3834  3746         1.020     
+##  deviance 2        3680  3746         0.982     
+##  vr       2        3620  3746         0.966
+\end{verbatim}
+\end{kframe}
+
+{\centering \includegraphics[width=.19\textwidth]{figure/graphic-ANCOVA_Diagnostics1} 
+\includegraphics[width=.19\textwidth]{figure/graphic-ANCOVA_Diagnostics2} 
+\includegraphics[width=.19\textwidth]{figure/graphic-ANCOVA_Diagnostics3} 
+\includegraphics[width=.19\textwidth]{figure/graphic-ANCOVA_Diagnostics4} 
+\includegraphics[width=.19\textwidth]{figure/graphic-ANCOVA_Diagnostics5} 
+\includegraphics[width=.19\textwidth]{figure/graphic-ANCOVA_Diagnostics6} 
+\includegraphics[width=.19\textwidth]{figure/graphic-ANCOVA_Diagnostics7} 
+\includegraphics[width=.19\textwidth]{figure/graphic-ANCOVA_Diagnostics8} 
+\includegraphics[width=.19\textwidth]{figure/graphic-ANCOVA_Diagnostics9} 
+\includegraphics[width=.19\textwidth]{figure/graphic-ANCOVA_Diagnostics10} 
+\includegraphics[width=.19\textwidth]{figure/graphic-ANCOVA_Diagnostics11} 
+\includegraphics[width=.19\textwidth]{figure/graphic-ANCOVA_Diagnostics12} 
+\includegraphics[width=.19\textwidth]{figure/graphic-ANCOVA_Diagnostics13} 
+\includegraphics[width=.19\textwidth]{figure/graphic-ANCOVA_Diagnostics14} 
+\includegraphics[width=.19\textwidth]{figure/graphic-ANCOVA_Diagnostics15} 
+\includegraphics[width=.19\textwidth]{figure/graphic-ANCOVA_Diagnostics16} 
+\includegraphics[width=.19\textwidth]{figure/graphic-ANCOVA_Diagnostics17} 
+
+}
+
+
+
+\end{knitrout}
+
+
+
+Test the probability that the $\beta_{1\cdot}$ are different
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+b11 <- ancova.sim[, 3]
+b12 <- ancova.sim[, 4]
+slopdif <- b11 - b12
+\hlfunctioncall{mean}(slopdif < 0)
+\end{alltt}
+\begin{verbatim}
+## [1] 0.7814
+\end{verbatim}
+\begin{alltt}
+\hlfunctioncall{mean}(slopdif > 0)
+\end{alltt}
+\begin{verbatim}
+## [1] 0.2186
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+
+Try a new model without the different $\beta_{1}$ then compare the DIC
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+mdl <- 'model \{
+    \hlfunctioncall{for}(i in 1:27) \{
+        scrap[i] ~ \hlfunctioncall{dnorm}(mu[i], prec);
+        mu[i] <- b_0[line[i]] + b_1*speed[i];
+    \}
+
+    b_1 ~ \hlfunctioncall{dnorm}(0, .01);
+    \hlfunctioncall{for} (i in 1:2) \{
+        b_0[i] ~ \hlfunctioncall{dnorm}(30, .001);
+    \}
+
+    vr ~ \hlfunctioncall{dgamma}(1.5, .0125);
+    prec <- 1/vr;
+\}
+'
+\hlfunctioncall{writeLines}(mdl, \hlstring{'code/ANCOVAModel_1.jags'})
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+prior for beta not covers
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+speed <- ac$speed
+line <- ac$line
+scrap <- ac$scrap
+jags.data <- \hlfunctioncall{c}(\hlstring{'speed'}, \hlstring{'line'}, \hlstring{'scrap'})
+jags.params <- \hlfunctioncall{c}(\hlstring{'b_0'},\hlstring{'b_1'}, \hlstring{'vr'})
+ancova1.jags <- \hlfunctioncall{jags}( data=jags.data,
+\hlcomment{                    # inits=innits,}
+                    parameters.to.save=jags.params,
+                    model.file=\hlstring{'code/ANCOVAModel_1.jags'},
+                    n.iter=12000, n.burnin=2000,
+                    n.chains=1, n.thin=1)
+\end{alltt}
+\begin{verbatim}
+## Compiling model graph
+##    Resolving undeclared variables
+##    Allocating nodes
+##    Graph Size: 142
+## 
+## Initializing model
+\end{verbatim}
+\begin{alltt}
+ancova1.jags
+\end{alltt}
+\begin{verbatim}
+## Inference for Bugs model at "code/ANCOVAModel_1.jags", fit using jags,
+##  1 chains, each with 12000 iterations (first 2000 discarded)
+##  n.sims = 10000 iterations saved
+##          mu.vect sd.vect    2.5%     25%     50%     75%  97.5%
+## b_0[1]    74.154  11.580  50.987  66.643  74.236  81.949  96.90
+## b_0[2]    21.933  12.213  -2.044  13.621  22.005  30.055  45.95
+## b_1        1.257   0.052   1.156   1.222   1.256   1.291   1.36
+## vr       369.910  85.910 233.121 308.243 359.554 419.347 564.88
+## deviance 242.053   2.761 238.636 240.016 241.464 243.406 248.97
+## 
+## DIC info (using the rule, pD = var(deviance)/2)
+## pD = 3.8 and DIC = 245.9
+## DIC is an estimate of expected predictive error (lower deviance is better).
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+
+Diagnostics
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+ancova1.sim <- \hlfunctioncall{as.mcmc}(ancova1.jags)
+\hlcomment{# plot(ancova.sim, auto.layout=FALSE, ask=FALSE) autocorr.plot(ancova.sim,}
+\hlcomment{# auto.layout=FALSE, ask=FALSE) raftery.diag(ancova.sim)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+
+Lets test differences in line by testing difference in intercept
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+b_0_1 <- ancova1.sim[, 1]
+b_0_2 <- ancova1.sim[, 2]
+line_diff <- b_0_1 - b_0_2
+\hlfunctioncall{mean}(line_diff < 0)
+\end{alltt}
+\begin{verbatim}
+## [1] 0
+\end{verbatim}
+\begin{alltt}
+\hlfunctioncall{mean}(line_diff > 0)
+\end{alltt}
+\begin{verbatim}
+## [1] 1
+\end{verbatim}
+\begin{alltt}
+\hlfunctioncall{plot}(\hlfunctioncall{density}(line_diff), col = \hlstring{"blue"})
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.4\textwidth]{figure/graphic-ANCOVA1_Line_Diff} 
+
+}
+
+
+
+\end{knitrout}
+
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlfunctioncall{plot}(ac$speed, ac$scrap, pch = ac$lines)
+\hlfunctioncall{abline}(82.2, 1.22, col = \hlstring{"blue"})
+\hlfunctioncall{abline}(13.7, 1.3, col = \hlstring{"red"})
+
+b_0_1 <- ancova.sim[, 1]
+b_0_2 <- ancova.sim[, 2]
+b_1_1 <- ancova.sim[, 3]
+b_1_2 <- ancova.sim[, 4]
+
+y1_300 <- 300 * b_1_1 + b_0_1
+y2_300 <- 300 * b_1_2 + b_0_2
+diff_300 <- y1_300 - y2_300
+\hlfunctioncall{mean}(diff_300 > 0)
+\end{alltt}
+\begin{verbatim}
+## [1] 1
+\end{verbatim}
+\end{kframe}
+
+{\centering \includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-37} 
+
+}
+
+
+
+\end{knitrout}
+
+% section analysis_of_covariance_ancova (end)
+\renewcommand{\dateTaken}{February 21, 2013}
+\daysep
+\begin{tabular}{ccccccc}
+   &   &    & B  &    &    & \\
+   &   &  1 &  2 &  3 &  4 & \\
+   & 1 &  $\mu_{11}$ &  $\mu_{12}$ &  $\mu_{13}$ &  $mu_{14}$ &  $\mu_{1\bullet}$\\ %$\frac{\mu_{11} +  \mu_{12} +  \mu_{13} +  mu_{14}}{4}=\mu_{1\bullet}$\\
+ A & 2 &  $\mu_{21}$ &  $\mu_{22}$ &  $\mu_{23}$ &  $mu_{24}$ &  $\mu_{2\bullet}$\\ %$\frac{\mu_{21} +  \mu_{22} +  \mu_{23} +  mu_{24}}{4}=\mu_{2\bullet}$\\
+   & 3 &  $\mu_{31}$ &  $\mu_{32}$ &  $\mu_{33}$ &  $mu_{34}$ &  $\mu_{3\bullet}$\\ %$\frac{\mu_{31} +  \mu_{32} +  \mu_{33} +  mu_{34}}{4}=\mu_{3\bullet}$\\
+   & 4 &  $\mu_{41}$ &  $\mu_{42}$ &  $\mu_{43}$ &  $mu_{44}$ &  $\mu_{4\bullet}$\\ %$\frac{\mu_{41} +  \mu_{42} +  \mu_{43} +  mu_{44}}{4}=\mu_{4\bullet}$\\
+   % &   & $\frac{\mu_{11} +  \mu_{21} +  \mu_{31} +  mu_{41}}{4}=\mu_{\bullet 1}$
+   %     & $\frac{\mu_{12} +  \mu_{22} +  \mu_{32} +  mu_{42}}{4}=\mu_{\bullet 2}$
+   %     & $\frac{\mu_{13} +  \mu_{23} +  \mu_{33} +  mu_{43}}{4}=\mu_{\bullet 3}$
+   %     & $\frac{\mu_{14} +  \mu_{24} +  \mu_{34} +  mu_{44}}{4}=\mu_{\bullet 4}$\\
+\end{tabular}
+
+\section{Multiple Sources of Variation} % (fold)
+\label{sec:multiple_sources_of_variation}
+\begin{align*}
+    \underline{y}= X\underline{\beta} + \underline{\varepsilon}\\
+    \varepsilon \sim \mathcal{N}(\underline{0}, \sigma^{2 \underline{T}})\\
+    \underline{y} = X \underline{\beta} + Z \underline{u} + e\\
+    e\sim \mathcal{N}(\underline{0}, R)\\
+    \underline{u} \sim \mathcal{N}(\underline{0}, G)\\
+\end{align*}
+
+\begin{align*}
+    \expv(Y)= \expv(X \beta + Z u + e) = \expv(X \beta) + \expv(Z u) + \expv(e)= X \beta\\
+    \var(Y) = \var(X \beta + Z u + e) = \var( Z u + e)
+\end{align*}
+If we assume that $u$ and $e$ are independent then we can move forward easily
+
+$V(A\underline{z})=A V(z) A'$
+$A V(z) A'$ is a $p \times p$ matrix
+\begin{align*}
+    \var( Z u + e)= V(Z\underline{u}) + \var(\underline{e}) = Z \var(\underline{u}) Z' + V(\underline{e} = Z G Z' + R
+\end{align*}
+\renewcommand{\dateTaken}{February 26, 2013}
+\daysep
+Treatments:
+\begin{tabular}{ccc}
+Block 1 &  & Block 2\\
+I ($y_{11}$) & & I ($y_{12}$)\\
+II ($y_{21}$) & & II ($y_{22}$)\\
+\end{tabular}
+
+Model in matrix form (Equation~\ref{eq:mv_matrix_model})
+\begin{align}\label{eq:mv_matrix_model}
+    \begin{bmatrix}
+        y_{11}\\
+        y_{12}\\
+        y_{21}\\
+        y_{22}\\
+    \end{bmatrix}
+    =\begin{bmatrix}
+        1 & 0\\
+        1 & 0\\
+        0 & 1\\
+        0 & 1\\
+    \end{bmatrix}
+\begin{pmatrix}
+    \mu_{1}\\
+    \mu_{2}\\
+\end{pmatrix} +
+\begin{bmatrix}
+    1 & 0\\
+    0 & 1\\
+    1 & 0\\
+    0 & 1\\
+\end{bmatrix}
+\begin{pmatrix}
+    u_{1}\\
+    u_{2}\\
+\end{pmatrix} +
+\begin{bmatrix}
+    e_{11}\\
+    e_{12}\\
+    e_{21}\\
+    e_{22}\\
+\end{bmatrix}
+\end{align}
+
+\begin{align*}
+    e_{ij} \sim^{iid} N(0, \sigma^{2}_{e})\\
+    u_{j} \sim^{iid} N(0,\sigma^{2}_{b}) \\
+\end{align*}
+\begin{align*}
+    R &= \begin{bmatrix}
+        \sigma^{2}_{e} & 0 & 0 & 0\\
+        0 & \sigma^{2}_{e} & 0 & 0\\
+        0 & 0 & \sigma^{2}_{e} & 0\\
+        0 & 0 & 0 & \sigma^{2}_{e}\\
+    \end{bmatrix}\\
+    G &= \begin{pmatrix}
+        \sigma^{2}_{b} & 0\\
+        0 & \sigma^{2}_{b}
+    \end{pmatrix}
+\end{align*}
+
+
+\begin{align*}
+\begin{bmatrix}
+        1 & 0\\
+        1 & 0\\
+        0 & 1\\
+        0 & 1\\
+\end{bmatrix}
+\begin{pmatrix}
+        \sigma^{2}_{b} & 0\\
+        0 & \sigma^{2}_{b}
+    \end{pmatrix}
+    \begin{bmatrix}
+        1 & 0 & 1 & 0\\
+        0 & 1 & 0 & 1\\
+    \end{bmatrix}
+    +\begin{bmatrix}
+        \sigma^{2}_{e} & 0 & 0 & 0\\
+        0 & \sigma^{2}_{e} & 0 & 0\\
+        0 & 0 & \sigma^{2}_{e} & 0\\
+        0 & 0 & 0 & \sigma^{2}_{e}\\
+    \end{bmatrix}\\
+    Z G Z' + R = \begin{bmatrix}
+        \sigma^{2}_{e} + \sigma^{2}_{b} & 0 & \sigma^{2}_{b} & 0\\
+        0 & \sigma^{2}_{e} + \sigma^{2}_{b}  & 0 & \sigma^{2}_{b}\\
+        \sigma^{2}_{b}  & 0 & \sigma^{2}_{e} + \sigma^{2}_{b} & 0 \\
+        0 & \sigma^{2}_{b} & 0 & \sigma^{2}_{e} + \sigma^{2}_{b}\\
+    \end{bmatrix}
+\end{align*}
+\begin{align*}
+    \rho_{y_{11} y_{21}} = \frac{\sigma^{2}_{b}}{\sqrt{\sigma^{2}_{3} + \sigma^{2}_{b}}\sqrt{\sigma^{2}_{3} + \sigma^{2}_{b}}} =\frac{\sigma^{2}_{b}}{\sigma^{2}_{3} + \sigma^{2}_{b}}
+\end{align*}
+% section multiple_sources_of_variation (end)
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+twoway <- \hlfunctioncall{read.table}(\hlstring{"data/05twoway.dat"}, col.names = \hlfunctioncall{c}(\hlstring{"block"}, \hlstring{"seedType"}, \hlstring{"inoculate"}, 
+    \hlstring{"yield"}))
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+
+First model with multiple souces of variance, s2blk is a hyper-prior, or a prior on a prior
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+mdl <- ' model \{
+    \hlfunctioncall{for} (i in 1:21) \{
+        yield[i] ~ \hlfunctioncall{dnorm}(mu[i], 1/s2e)
+        mu[i] <- aaron[cultn[i], inocn[i]] + u[block[i]]
+    \}
+
+    \hlfunctioncall{for} (i in 1:2)\{
+        \hlfunctioncall{for} (j in 1:3) \{
+            aaron[i,j] ~ \hlfunctioncall{dnorm}(30, .001);
+
+        \}
+    \}
+
+    \hlfunctioncall{for} (i in 1:4) \{
+        u[i] ~ \hlfunctioncall{dnorm}(0, 1/s2blk)
+    \}
+
+    s2e ~ \hlfunctioncall{dgamma}(1.5, .1);
+    s2blk ~ \hlfunctioncall{dgamma}(1.5, .1);
+\}
+'
+\hlfunctioncall{writeLines}(mdl, \hlstring{'code/MixedModels.jags'})
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+yield <- twoway[, 4]
+cultn <- \hlfunctioncall{as.numeric}(twoway$seedType)
+inocn <- \hlfunctioncall{as.numeric}(twoway$inoculate)
+block <- twoway[, 1]
+
+jags.data <- \hlfunctioncall{c}(\hlstring{"yield"}, \hlstring{"cultn"}, \hlstring{"inocn"}, \hlstring{"block"})
+jags.params <- \hlfunctioncall{c}(\hlstring{"aaron"}, \hlstring{"s2e"}, \hlstring{"s2blk"})
+\hlfunctioncall{set.seed}(343)
+mixedm.jags <- \hlfunctioncall{jags}(data = jags.data, parameters.to.save = jags.params, model.file = \hlstring{"code/MixedModels.jags"}, 
+    n.iter = 12000, n.burnin = 2000, n.chains = 1, n.thin = 1)
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\textcolor{messagecolor}{\#\# module glm loaded}}\begin{verbatim}
+## Compiling model graph
+##    Resolving undeclared variables
+##    Allocating nodes
+##    Graph Size: 137
+## 
+## Initializing model
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+
+Difference between 1 and 2
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+mixedm.sim <- \hlfunctioncall{as.mcmc}(mixedm.jags)
+cultivarA <- (mixedm.sim[, 1] + mixedm.sim[, 3] + mixedm.sim[, 5])/3
+cultivarB <- (mixedm.sim[, 2] + mixedm.sim[, 4] + mixedm.sim[, 6])/3
+
+\hlfunctioncall{mean}(cultivarA)
+\end{alltt}
+\begin{verbatim}
+## [1] 30.09
+\end{verbatim}
+\begin{alltt}
+\hlfunctioncall{mean}(cultivarB)
+\end{alltt}
+\begin{verbatim}
+## [1] 31.13
+\end{verbatim}
+\begin{alltt}
+\hlfunctioncall{plot}(\hlfunctioncall{density}(cultivarA - cultivarB))
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-39} 
+
+}
+
+
+
+\end{knitrout}
+
+\renewcommand{\dateTaken}{February 28, 2013}
+\daysep
+Simpler Mixed Model
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+bond <- \hlfunctioncall{read.table}(\hlstring{"data/07mixedmods.dat"}, header = TRUE)
+metn <- \hlfunctioncall{rep}(1:3, 21/3)
+bond <- \hlfunctioncall{cbind}(bond, metn)
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+mdl <- \hlstring{" model\{\textbackslash{}\hlfunctioncall{nfor} (i in 1:21)\{\textbackslash{}npressure[i] ~ \hlfunctioncall{dnorm}(mu[i], 1/s2error);\textbackslash{}nmu[i] <- gamma[metn[i]] + u[ingot[i]]\textbackslash{}n\}\textbackslash{}\hlfunctioncall{ninvisible}(\textbackslash{}"}.BeGiN_TiDy_IdEnTiFiEr_HaHaHa.HaHaHa_EnD_TiDy_IdEnTiFiEr\textbackslash{}\hlstring{")\textbackslash{}\hlfunctioncall{nfor} (i in 1:3) \{\textbackslash{}ngamma[i] ~ \hlfunctioncall{dnorm}(75, 0.001)\textbackslash{}n\}\textbackslash{}\hlfunctioncall{ninvisible}(\textbackslash{}"}.BeGiN_TiDy_IdEnTiFiEr_HaHaHa.HaHaHa_EnD_TiDy_IdEnTiFiEr\textbackslash{}\hlstring{")\textbackslash{}\hlfunctioncall{nfor} (i in 1:7) \{\textbackslash{}nu[i] ~ \hlfunctioncall{dnorm}(0, 1/s2ing)\textbackslash{}n\}\textbackslash{}\hlfunctioncall{ninvisible}(\textbackslash{}"}.BeGiN_TiDy_IdEnTiFiEr_HaHaHa.HaHaHa_EnD_TiDy_IdEnTiFiEr\textbackslash{}\hlstring{")\textbackslash{}ns2error ~ \hlfunctioncall{dgamma}(1.5, 0.1);\textbackslash{}ns2ing   ~ \hlfunctioncall{dgamma}(1.5, 0.1);\textbackslash{}n\}\textbackslash{}n"}
+\hlfunctioncall{writeLines}(mdl, \hlstring{"code/SimpleMixedModel.jags"})
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+metn <- bond[, 4]
+ingot <- bond[, 1]
+pressure <- bond[, 3]
+
+jags.data <- \hlfunctioncall{c}(\hlstring{"metn"}, \hlstring{"ingot"}, \hlstring{"pressure"})
+jags.params <- \hlfunctioncall{c}(\hlstring{"gamma"}, \hlstring{"s2error"}, \hlstring{"s2ing"})
+
+bond.jags <- \hlfunctioncall{jags}(data = jags.data, parameters.to.save = jags.params, model.file = \hlstring{"code/SimpleMixedModel.jags"}, 
+    n.iter = 12000, n.burnin = 2000, n.chains = 1, n.thin = 1)
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\textcolor{messagecolor}{\#\# module glm loaded}}
+
+{\ttfamily\noindent\bfseries\textcolor{errorcolor}{\#\# Error: \\\#\# Error parsing model file:\\\#\# syntax error on line 6 near """}}\begin{alltt}
+bond.sim <- \hlfunctioncall{as.mcmc}(bond.jags)
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\textcolor{errorcolor}{\#\# Error: object 'bond.jags' not found}}\end{kframe}
+\end{knitrout}
+
+
+ICC or interclass corelation is a measure of reliability of messurements
+\begin{align}
+    ICC = \frac{\sigma^{2}_{i}}{\sigma^{2}_{e}+\sigma^{2}_{i}}
+\end{align}
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+icc <- bond.sim[, 5]/(bond.sim[, 6] + bond.sim[, 5])
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\textcolor{errorcolor}{\#\# Error: object 'bond.sim' not found}}\begin{alltt}
+\hlfunctioncall{plot}(\hlfunctioncall{density}(icc))
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\textcolor{errorcolor}{\#\# Error: object 'icc' not found}}\end{kframe}
+\end{knitrout}
+
+
+plot something
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+indif <- bond.sim[, 3] - bond.sim[, 2]
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\textcolor{errorcolor}{\#\# Error: object 'bond.sim' not found}}\begin{alltt}
+icdif <- bond.sim[, 3] - bond.sim[, 4]
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\textcolor{errorcolor}{\#\# Error: object 'bond.sim' not found}}\end{kframe}
+\end{knitrout}
+
+
+\textbf{Back to Complex}
+\begin{tabular}{ccccc}
+ &  &  & inoc & \\
+ &  & con & dea & liv \\
+ cult & a & $\alpha_{1 1}$ & $\alpha_{1 2}$ & $\alpha_{1 3}$\\
+ & b & $\alpha_{2 1}$ & $\alpha_{2 2}$ & $\alpha_{2 3}$\\
+\end{tabular}
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+int1 <- mixedm.sim[, 2] - mixedm.sim[, 4] - mixedm.sim[, 3] + mixedm.sim[, 5]
+int2 <- mixedm.sim[, 4] - mixedm.sim[, 6] - mixedm.sim[, 5] + mixedm.sim[, 7]
+\hlfunctioncall{plot}(\hlfunctioncall{density}(int1))
+\hlfunctioncall{plot}(\hlfunctioncall{density}(int2))
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-451} 
+\includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-452} 
+
+}
+
+
+
+\end{knitrout}
+
+Let's say that there's no interaction, because
+
+\renewcommand{\dateTaken}{March  5, 2013}
+\daysep
+
+\section{Random Coefficients Model} % (fold)
+\label{sec:random_coefficients_model}
+Genetically identical seeds we treat as subjects
+
+Sixty observations, but only ten wheat types, so there are really somewhere in the middle
+
+\begin{align*}
+    \text{yield}_{i j} = \beta_{0} + \beta_{1}\cdot \text{moisture}_{j} + u1_{i} + u2_{i} \cdot \text{moisture}_{j} + \text{error}_{ij}
+\end{align*}
+so the deviation $u$ has both a slope and an intercept.
+
+% \begin{align*}
+%     y=X \beta + Z u + e
+% \end{align*}
+\begin{align*}
+    y = \begin{bmatrix}
+        1 & 10\\
+        1 & 17\\
+        1 & \vdots\\
+        \vdots & \ddots\\
+    \end{bmatrix}
+    \begin{pmatrix}
+        \beta_{0}\\
+        \beta_{1}
+    \end{pmatrix}
+    \begin{bmatrix}
+        1 & 10 & 0 & 0 & 0 & 0 & \ldots \\
+        1 & 57 & 0 & 0 & 0 & 0 & \ldots \\
+        \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \ldots \\
+        1 & 40 & 0 & 0 & 0 & 0 & \ldots \\
+        0 & 0 & 1 & 16 & 0 & 0 & \ldots \\
+        \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \ldots \\
+        0 & 0 & 0 & 0 & 1 & 39 & \ldots \\
+        \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \ddots
+    \end{bmatrix}
+\begin{pmatrix}
+    u0_{1}\\
+    u1_{1}\\
+    u0_{2}\\
+    u1_{2}\\
+    u0_{3}\\
+    u1_{3}\\
+    u0_{4}\\
+    u1_{4}\\
+    u0_{5}\\
+    u1_{5}\\
+    u0_{6}\\
+    u1_{6}\\
+\end{pmatrix}
+\end{align*}
+\begin{align*}
+    G=\begin{bmatrix}
+        \sigma^{2}_{int} & 0                & 0                & 0 & \ldots \\
+        0                & \sigma^{2}_{slp} & 0                & 0 & \ldots \\
+        0                & 0                & \sigma^{2}_{int} & 0 & \ldots \\
+        0                & 0                & 0                & \sigma^{2}_{slp} & \ldots \\
+        \vdots & \vdots & \vdots & \vdots & \ddots
+    \end{bmatrix}
+\end{align*}
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+wheat <- \hlfunctioncall{read.table}(\hlstring{"data/10randomcoef.dat"}, header=TRUE)
+yield <- wheat$yield
+variety <- wheat$variety
+moisture <- wheat$moisture
+mdl <- ' model \{
+    \hlfunctioncall{for} (i in 1:60) \{
+        yield[i] ~ \hlfunctioncall{dnorm}(mu[i], 1/s2err)
+        mu[i] <- b0 + b1 * moisture[i] + u0[variety[i]] + u1[variety[i]] * moisture[i]
+    \}
+
+    b0 ~ \hlfunctioncall{dnorm}(30, 0.001)
+    b1 ~ \hlfunctioncall{dnorm}(0, 0.1)
+
+    \hlfunctioncall{for} (i in 1:10) \{
+        u0[i] ~ \hlfunctioncall{dnorm}(0, 1/s2int)
+        u1[i] ~ \hlfunctioncall{dnorm}(0, 1/s2slp)
+    \}
+
+    s2err ~ \hlfunctioncall{dgamma}(1.1, .5)
+    s2int ~ \hlfunctioncall{dgamma}(1.1, .1)
+    s2slp ~ \hlfunctioncall{dgamma}(1.1, 2)
+\}
+'
+\hlfunctioncall{writeLines}(mdl, \hlstring{'code/RandomCoeff.jags'})
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+jags.data <- \hlfunctioncall{c}(\hlstring{"yield"}, \hlstring{"variety"}, \hlstring{"moisture"})
+jags.params <- \hlfunctioncall{c}(\hlstring{"b0"}, \hlstring{"b1"}, \hlstring{"u0"}, \hlstring{"u1"}, \hlstring{"s2err"}, \hlstring{"s2int"}, \hlstring{"s2slp"})
+
+rc1.jags <- \hlfunctioncall{jags}(data = jags.data, parameters.to.save = jags.params, model.file = \hlstring{"code/RandomCoeff.jags"}, 
+    n.iter = 12000, n.burnin = 2000, n.chains = 1, n.thin = 1)
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\textcolor{messagecolor}{\#\# module glm loaded}}\begin{verbatim}
+## Compiling model graph
+##    Resolving undeclared variables
+##    Allocating nodes
+##    Graph Size: 366
+## 
+## Initializing model
+\end{verbatim}
+\begin{alltt}
+rc1.jags
+\end{alltt}
+\begin{verbatim}
+## Inference for Bugs model at "code/RandomCoeff.jags", fit using jags,
+##  1 chains, each with 12000 iterations (first 2000 discarded)
+##  n.sims = 10000 iterations saved
+##          mu.vect sd.vect    2.5%     25%     50%     75%   97.5%
+## b0        33.406   1.355  30.710  32.525  33.397  34.263  36.139
+## b1         0.662   0.022   0.617   0.648   0.662   0.675   0.704
+## s2err      0.389   0.092   0.248   0.322   0.378   0.442   0.603
+## s2int     17.953   7.124   8.213  12.823  16.548  21.613  36.010
+## s2slp      0.004   0.003   0.001   0.002   0.003   0.005   0.013
+## u0[1]      0.958   1.472  -1.995  -0.016   0.964   1.925   3.839
+## u0[2]     -2.114   1.518  -5.174  -3.128  -2.109  -1.107   0.894
+## u0[3]     -0.371   1.501  -3.410  -1.352  -0.376   0.639   2.534
+## u0[4]      0.716   1.447  -2.145  -0.225   0.713   1.656   3.551
+## u0[5]      1.097   1.664  -2.225  -0.001   1.102   2.217   4.370
+## u0[6]      4.602   1.434   1.760   3.684   4.604   5.529   7.451
+## u0[7]    -10.563   1.420 -13.406 -11.479 -10.560  -9.637  -7.808
+## u0[8]      2.380   1.449  -0.466   1.433   2.365   3.350   5.277
+## u0[9]     -0.162   1.492  -3.148  -1.131  -0.170   0.815   2.783
+## u0[10]     3.573   1.840  -0.041   2.339   3.551   4.809   7.153
+## u1[1]     -0.049   0.026  -0.099  -0.065  -0.049  -0.032   0.002
+## u1[2]     -0.072   0.033  -0.141  -0.093  -0.071  -0.050  -0.009
+## u1[3]      0.067   0.028   0.016   0.049   0.066   0.085   0.124
+## u1[4]     -0.023   0.028  -0.080  -0.041  -0.023  -0.005   0.033
+## u1[5]     -0.019   0.030  -0.079  -0.038  -0.019   0.001   0.040
+## u1[6]      0.026   0.025  -0.022   0.010   0.025   0.041   0.075
+## u1[7]      0.051   0.027  -0.001   0.033   0.050   0.068   0.107
+## u1[8]      0.024   0.027  -0.028   0.007   0.023   0.041   0.079
+## u1[9]      0.024   0.027  -0.028   0.006   0.024   0.041   0.077
+## u1[10]    -0.029   0.033  -0.095  -0.050  -0.029  -0.008   0.034
+## deviance 110.389   8.401  96.576 104.372 109.459 115.604 128.815
+## 
+## DIC info (using the rule, pD = var(deviance)/2)
+## pD = 35.3 and DIC = 145.7
+## DIC is an estimate of expected predictive error (lower deviance is better).
+\end{verbatim}
+\begin{alltt}
+rc1.sim <- \hlfunctioncall{as.mcmc}(rc1.jags)
+\hlfunctioncall{plot}(rc1.sim, auto.layout = FALSE, ask = FALSE)
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim1} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim2} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim3} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim4} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim5} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim6} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim7} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim8} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim9} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim10} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim11} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim12} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim13} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim14} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim15} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim16} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim17} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim18} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim19} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim20} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim21} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim22} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim23} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim24} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim25} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim26} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim27} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim28} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim29} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim30} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim31} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim32} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim33} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim34} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim35} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim36} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim37} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim38} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim39} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim40} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim41} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim42} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim43} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim44} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim45} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim46} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim47} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim48} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim49} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim50} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim51} 
+\includegraphics[width=.16\textwidth]{figure/graphic-RandomCoeffSim52} 
+
+}
+
+
+
+\end{knitrout}
+
+
+Find the variance of the $y$
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+g <- \hlfunctioncall{rbind}(\hlfunctioncall{cbind}(18.645, 0), \hlfunctioncall{cbind}(0, 0.005))
+r <- \hlfunctioncall{diag}(0.392, 60)
+z <- \hlfunctioncall{model.matrix}(~-1 + \hlfunctioncall{as.factor}(variety) + \hlfunctioncall{as.factor}(variety):moisture, wheat)
+Z <- z[, \hlfunctioncall{c}(1, 11, 2, 12, 3, 13, 4, 14, 5, 15, 6, 16, 7, 17, 8, 18, 9, 19, 10, 20)]  \hlcomment{# need to rearrange so that the intercepts and slopes are interleaved}
+G <- \hlfunctioncall{kronecker}(\hlfunctioncall{diag}(1, 10), g)
+V <- Z %*% G %*% \hlfunctioncall{t}(Z) + r
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\renewcommand{\dateTaken}{March  7, 2013}
+\daysep
+
+To get the slope or intercept for the particular variety, add the fixed effect and the random effect for the variety.
+% section random_coefficients_model (end)
+\section{Hierarchical Models} % (fold)
+\label{sec:hierarchical_models}
+$y=\mu_{0}+\mu_{s}\text{moisture} + e$
+
+$\mu_{0}~\mathcal{N}(\mu_{0}, \sigma^{2}_{0})$, $\mu_{s}\sim\mathcal{N}(\mu,\sigma^{2}_{s})$, $e\sim(0,\sigma^{2}_{e}$
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+wheat <- \hlfunctioncall{read.table}(\hlstring{"data/10randomcoef.dat"}, header=TRUE)
+yield <- wheat$yield
+variety <- wheat$variety
+moisture <- wheat$moisture
+mdl <- ' model \{
+    \hlfunctioncall{for} (i in 1:60) \{
+        yield[i] ~ \hlfunctioncall{dnorm}(mu[i], 1/s2err)
+        mu[i] <- u0[variety[i]] + u1[variety[i]] * moisture[i]
+    \}
+
+    b0 ~ \hlfunctioncall{dnorm}(30, 0.001)
+    b1 ~ \hlfunctioncall{dnorm}(0, 0.1)
+
+    \hlfunctioncall{for} (i in 1:10) \{
+        u0[i] ~ \hlfunctioncall{dnorm}(beta0, 1/s2int)
+        u1[i] ~ \hlfunctioncall{dnorm}(beta1, 1/s2slp)
+    \}
+
+    beta0 ~ \hlfunctioncall{dnorm}(30, 0.001)
+    beta1 ~ \hlfunctioncall{dnorm}(0, 0.1)
+
+    s2err ~ \hlfunctioncall{dgamma}(1.1, .5)
+    s2int ~ \hlfunctioncall{dgamma}(1.1, .1)
+    s2slp ~ \hlfunctioncall{dgamma}(1.1, 2)
+\}
+'
+\hlfunctioncall{writeLines}(mdl, \hlstring{'code/Hierarchical.jags'})
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+jags.data <- \hlfunctioncall{c}(\hlstring{"yield"}, \hlstring{"variety"}, \hlstring{"moisture"})
+jags.params <- \hlfunctioncall{c}(\hlstring{"beta0"}, \hlstring{"beta1"}, \hlstring{"u0"}, \hlstring{"u1"}, \hlstring{"s2err"}, \hlstring{"s2int"}, \hlstring{"s2slp"})
+
+hier.jags <- \hlfunctioncall{jags}(data = jags.data, parameters.to.save = jags.params, model.file = \hlstring{"code/Hierarchical.jags"}, 
+    n.iter = 12000, n.burnin = 2000, n.chains = 1, n.thin = 1)
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# module glm loaded}}\begin{verbatim}
+## Compiling model graph
+##    Resolving undeclared variables
+##    Allocating nodes
+##    Graph Size: 334
+## 
+## Initializing model
+\end{verbatim}
+\begin{alltt}
+hier.jags
+\end{alltt}
+\begin{verbatim}
+## Inference for Bugs model at "code/Hierarchical.jags", fit using jags,
+##  1 chains, each with 12000 iterations (first 2000 discarded)
+##  n.sims = 10000 iterations saved
+##          mu.vect sd.vect   2.5%     25%     50%     75%   97.5%
+## beta0     33.422   1.366 30.708  32.548  33.423  34.308  36.162
+## beta1      0.661   0.023  0.613   0.648   0.662   0.675   0.706
+## s2err      0.391   0.094  0.247   0.324   0.379   0.444   0.613
+## s2int     18.019   7.236  8.118  12.861  16.541  21.633  35.702
+## s2slp      0.005   0.004  0.001   0.002   0.004   0.006   0.015
+## u0[1]     34.367   0.689 33.034  33.905  34.362  34.826  35.724
+## u0[2]     31.309   0.794 29.711  30.783  31.322  31.840  32.870
+## u0[3]     33.022   0.706 31.659  32.538  33.019  33.497  34.405
+## u0[4]     34.126   0.592 32.972  33.725  34.129  34.518  35.286
+## u0[5]     34.508   1.114 32.321  33.749  34.511  35.256  36.712
+## u0[6]     38.019   0.539 36.958  37.661  38.017  38.376  39.098
+## u0[7]     22.834   0.499 21.876  22.506  22.821  23.160  23.828
+## u0[8]     35.783   0.599 34.601  35.388  35.780  36.178  36.983
+## u0[9]     33.254   0.704 31.901  32.778  33.251  33.717  34.645
+## u0[10]    36.978   1.391 34.238  36.047  36.969  37.916  39.672
+## u1[1]      0.613   0.016  0.581   0.603   0.613   0.623   0.644
+## u1[2]      0.589   0.028  0.533   0.570   0.589   0.608   0.645
+## u1[3]      0.729   0.018  0.694   0.717   0.729   0.741   0.764
+## u1[4]      0.638   0.021  0.598   0.625   0.638   0.652   0.679
+## u1[5]      0.643   0.023  0.596   0.627   0.642   0.659   0.688
+## u1[6]      0.687   0.013  0.661   0.678   0.687   0.696   0.713
+## u1[7]      0.713   0.018  0.678   0.701   0.713   0.725   0.748
+## u1[8]      0.686   0.017  0.652   0.675   0.686   0.697   0.719
+## u1[9]      0.685   0.018  0.650   0.674   0.685   0.697   0.720
+## u1[10]     0.632   0.027  0.579   0.614   0.633   0.650   0.686
+## deviance 110.551   8.430 96.364 104.516 109.746 115.607 129.397
+## 
+## DIC info (using the rule, pD = var(deviance)/2)
+## pD = 35.5 and DIC = 146.1
+## DIC is an estimate of expected predictive error (lower deviance is better).
+\end{verbatim}
+\begin{alltt}
+hier.sim <- \hlfunctioncall{as.mcmc}(hier.jags)
+\hlfunctioncall{plot}(hier.sim, auto.layout = inter_plots, ask = inter_plots)
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim1} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim2} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim3} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim4} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim5} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim6} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim7} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim8} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim9} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim10} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim11} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim12} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim13} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim14} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim15} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim16} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim17} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim18} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim19} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim20} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim21} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim22} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim23} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim24} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim25} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim26} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim27} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim28} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim29} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim30} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim31} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim32} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim33} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim34} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim35} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim36} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim37} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim38} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim39} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim40} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim41} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim42} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim43} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim44} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim45} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim46} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim47} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim48} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim49} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim50} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim51} 
+\includegraphics[width=.16\textwidth]{figure/graphic-HierarchicalSim52} 
+
+}
+
+
+
+\end{knitrout}
+
+
+Hierarchical models are virtually identical as random coefficients models, but are more pure Bayesian in thought process and methodology.
+\begin{lstlisting}
+%let notedir = Z:\Dropbox\Active\STAT451\Notes\data;
+filename data "&notedir./data/10randomcoef.dat";
+filename outfile "&notedir./output/2013-03-07.html";
+ods listing close;
+
+data monkeyRatio;
+    infile data;
+    input  obs variety yield moisture;
+run;
+
+ODS GRAPHICS on / imagename="2013-03-07-Plots";
+ods html body=outfile (url=none)
+         GPATH="&notedir.\figures\";
+
+proc mcmc data=wheat output=wheat_chains nmc=100000 nbi=20000 thin=10 seed=1234 monitor=(_parms_);
+    diag(ess autocorr rl) propcov=quanew;
+    parms mu0 30 mu1 0 s2 1;
+    parms s2int 30 s2slp .1;
+    random int ~ normal(mu0,var=s2int) subject=variety monitor=(int_1 int_2);
+    random slp ~ normal(mu1,var=s2slp) subject=variety;
+    prior mu0 ~ normal(30, var=100);
+    prior mu1 ~ normal(0, var=0.1);
+    prior s2 ~ dunif(0,3);
+    prior s2int ~ dunif(0,50);
+    prior s2slp ~ dunif(0,.2);
+    mu = int + slp*moisture;
+    model yield ~ normal(mu,var=s2);
+run;
+ods html close;
+\end{lstlisting}
+% section hierarchical_models (end)
 \end{document}

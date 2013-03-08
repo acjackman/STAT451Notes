@@ -1,0 +1,15 @@
+
+model {
+    for (i in 1:24) {
+        yield[i] ~ dnorm(mu[ncult[i],ninoc[i]], 1/vv)
+    }
+
+    for (i in 1:2) {
+        for (j in 1:3) {
+            mu[i,j] ~ dnorm(0, .000001)
+        }
+    }
+
+    vv ~ dgamma(1.5, .1)
+}
+

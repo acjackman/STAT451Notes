@@ -1,0 +1,12 @@
+
+	model {
+		for(i in 1:33){
+			y[i] ~ dnorm(mu[tmt[i]],prec[tmt[i]]);
+		}
+	for(i in 1:2){
+		mu[i] ~ dnorm(0,0.000001);
+		vr[i] ~ dunif(0,5000);
+		prec[i] <- 1/vr[i];
+		}
+	}
+

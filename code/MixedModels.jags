@@ -1,0 +1,17 @@
+ model {
+    for (i in 1:21) {
+        yield[i] ~ dnorm(mu[i], 1/s2e)
+        mu[i] <- aaron[cultn[i], inocn[i]] + u[block[i]]
+    }
+    for (i in 1:2){
+        for (j in 1:3) {
+            aaron[i,j] ~ dnorm(30, .001);
+        }
+    }
+    for (i in 1:4) {
+        u[i] ~ dnorm(0, 1/s2blk)
+    }
+    s2e ~ dgamma(1.5, .1);
+    s2blk ~ dgamma(1.5, .1);
+}
+

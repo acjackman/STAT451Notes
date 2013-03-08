@@ -1,0 +1,15 @@
+model {
+for(1 in 1:27){
+scrap[i] ~ dnorm(mu[i], prec);
+mu[i] <- b_0[line[i]] + b_1[line[i]]*speed[i];
+}
+invisible(".BeGiN_TiDy_IdEnTiFiEr_HaHaHa.HaHaHa_EnD_TiDy_IdEnTiFiEr")
+for (i in 1:2) {
+b_0[i] ~ dnorm(30, .001);
+b_1[i] ~ dnorm(0, .01);
+}
+invisible(".BeGiN_TiDy_IdEnTiFiEr_HaHaHa.HaHaHa_EnD_TiDy_IdEnTiFiEr")
+vr ~ dgamma(1.5, .0125);
+prec <- 1/vr;
+}
+

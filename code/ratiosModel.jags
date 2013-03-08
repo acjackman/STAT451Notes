@@ -1,0 +1,10 @@
+
+    model {
+        for (i in 1:N) {
+            ratios[i] ~ dbeta(alpha, beta)
+        }
+        alpha ~ dgamma(5, 40)
+        beta ~ dgamma(5, 40)
+        mu <- alpha/(alpha+beta)
+    }
+

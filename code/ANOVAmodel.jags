@@ -1,0 +1,14 @@
+model {
+    # Likelihood
+    for (i in 1:N){
+        response[i] ~ dnorm(mu[tmt[i]], prec)
+    }
+
+    # Create priors for each treatment
+    for(i in 1:4){
+        mu[i] ~ dnorm(15,.0001)
+    }
+    prec <- 1/vv
+    vv ~ dgamma(1.1,.1)
+}
+
