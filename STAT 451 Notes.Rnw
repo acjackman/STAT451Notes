@@ -21,8 +21,8 @@ opts_chunk$set(fig.path='figure/graphic-', cache.path='cache/graphic-', fig.alig
 options(width=80)
 knit_hooks$set(crop = hook_pdfcrop)
 # render_listings() # Use listings instead of regular output
-
 library(R2jags)
+inter_plots <- FALSE
 @
 
 \begin{document}
@@ -1421,5 +1421,92 @@ Z <- z[,c(1,11,2,12,3,13,4,14,5,15,6,16,7,17,8,18,9,19,10,20)] # need to rearran
 G <- kronecker(diag(1,10),g)
 V <- Z %*% G %*% t(Z) + r
 @
+\renewcommand{\dateTaken}{March  7, 2013}
+\daysep
+
+To get the slope or intercept for the particular variety, add the fixed effect and the random effect for the variety.
 % section random_coefficients_model (end)
+\section{Hierarchical Models} % (fold)
+\label{sec:hierarchical_models}
+$y=\mu_{0}+\mu_{s}\text{moisture} + e$
+
+$\mu_{0}~\mathcal{N}(\mu_{0}, \sigma^{2}_{0})$, $\mu_{s}\sim\mathcal{N}(\mu,\sigma^{2}_{s})$, $e\sim(0,\sigma^{2}_{e}$
+
+<<"HierarchicalModel", tidy=FALSE>>=
+wheat <- read.table("data/10randomcoef.dat", header=TRUE)
+yield <- wheat$yield
+variety <- wheat$variety
+moisture <- wheat$moisture
+mdl <- ' model {
+    for (i in 1:60) {
+        yield[i] ~ dnorm(mu[i], 1/s2err)
+        mu[i] <- u0[variety[i]] + u1[variety[i]] * moisture[i]
+    }
+
+    b0 ~ dnorm(30, 0.001)
+    b1 ~ dnorm(0, 0.1)
+
+    for (i in 1:10) {
+        u0[i] ~ dnorm(beta0, 1/s2int)
+        u1[i] ~ dnorm(beta1, 1/s2slp)
+    }
+
+    beta0 ~ dnorm(30, 0.001)
+    beta1 ~ dnorm(0, 0.1)
+
+    s2err ~ dgamma(1.1, .5)
+    s2int ~ dgamma(1.1, .1)
+    s2slp ~ dgamma(1.1, 2)
+}
+'
+writeLines(mdl, 'code/Hierarchical.jags')
+@
+
+<<HierarchicalSim, dependson=c("HierarchicalModel"), out.width='.16\\textwidth'>>=
+jags.data   <- c('yield', 'variety', 'moisture')
+jags.params <- c('beta0', 'beta1', 'u0','u1', 's2err', 's2int', 's2slp')
+
+hier.jags <- jags(data=jags.data,
+                  parameters.to.save=jags.params,
+                  model.file='code/Hierarchical.jags',
+                  n.iter=12000, n.burnin=2000,
+                  n.chains=1, n.thin=1)
+hier.jags
+hier.sim <- as.mcmc(hier.jags)
+plot(hier.sim, auto.layout=inter_plots, ask=inter_plots)
+@
+
+Hierarchical models are virtually identical as random coefficients models, but are more pure Bayesian in thought process and methodology.
+\begin{lstlisting}
+%let notedir = Z:\Dropbox\Active\STAT451\Notes\data;
+filename data "&notedir./data/10randomcoef.dat";
+filename outfile "&notedir./output/2013-03-07.html";
+ods listing close;
+
+data monkeyRatio;
+    infile data;
+    input  obs variety yield moisture;
+run;
+
+ODS GRAPHICS on / imagename="2013-03-07-Plots";
+ods html body=outfile (url=none)
+         GPATH="&notedir.\figures\";
+
+proc mcmc data=wheat output=wheat_chains nmc=100000 nbi=20000 thin=10 seed=1234 monitor=(_parms_);
+    diag(ess autocorr rl) propcov=quanew;
+    parms mu0 30 mu1 0 s2 1;
+    parms s2int 30 s2slp .1;
+    random int ~ normal(mu0,var=s2int) subject=variety monitor=(int_1 int_2);
+    random slp ~ normal(mu1,var=s2slp) subject=variety;
+    prior mu0 ~ normal(30, var=100);
+    prior mu1 ~ normal(0, var=0.1);
+    prior s2 ~ dunif(0,3);
+    prior s2int ~ dunif(0,50);
+    prior s2slp ~ dunif(0,.2);
+    mu = int + slp*moisture;
+    model yield ~ normal(mu,var=s2);
+run;
+ods html close;
+\end{lstlisting}
+% section hierarchical_models (end)
 \end{document}
