@@ -1509,4 +1509,116 @@ run;
 ods html close;
 \end{lstlisting}
 % section hierarchical_models (end)
+\renewcommand{\dateTaken}{March 12, 2013}
+\daysep
+
+\section{Exam Debriefing} % (fold)
+\label{sec:exam_debriefing}
+Covergence Diagnostics should have included:
+\begin{itemize}
+    \item Traceplots
+    \item Autocorrelation
+    \item Effective sample size
+    \item Raftery-lewis
+\end{itemize}
+Model should have been a model with six means and six variances
+
+\begin{tabular}{cccccc}
+ &  &   & Gain & &\\
+ &  & 1 & 2    & 3 &\\
+ Duration & 1 &$\mu_{1}$ & $\mu_{2}$& $\mu_{3}$ & $\frac{\mu_{1}+\mu_{2}+\mu_{3}}{3}$ \\
+ & 2 &$\mu_{4}$ & $\mu_{5}$& $\mu_{6}$&$\frac{\mu_{4}+\mu_{5}+\mu_{6}}{3}$ \\
+ & & $\frac{\mu_{1}+\mu{4}}{2}$ & $\frac{\mu_{2}+\mu{5}}{2}$ & $\frac{\mu_{3}+\mu{6}}{2}$ &
+\end{tabular}
+
+Next exam will probably have
+\begin{itemize}
+    \item a random effects and or hierarchal model
+    \item Non-normal likelihood
+\end{itemize}
+% section exam_debriefing (end)
+\section{Logistic Regression} % (fold)
+\label{sec:logistic_regression}
+What we have done so far:
+\begin{itemize}
+    \item ANOVA
+    \item Regression
+    \item ANCOVA --- Both Categorical and Continuous predictors
+    \item Mixed --- More than one source of variability
+\end{itemize}
+
+\begin{tabular}{c c| c c}
+ &  & \textbf{Response} & \\
+ &  & Categorical & Continuous \\
+ \hline
+ \textbf{Predictors} & Categorical & & ANOVA \\
+ & Continuous & & Regression
+\end{tabular}
+
+$y=\binomd(n,\pi)$, with $0 \le \pi \le 1$
+
+Odds: $\frac{\pi}{1-\pi}$
+
+Sports ``3 to 1'' is 3 failures for every one success or $\pi=.25$
+
+$Odds > 0$, 1 should be the midpoint
+
+odds have a skewed distribution
+
+\begin{tabular}{c|c|c}
+ \hline
+ probability & Odds & $\log(\text{Odds)}$\\
+ $\pi$ & Success-Failure & $\log(S/F)$\\
+ \hline
+ $\frac{1}{5}$ & 1 - 1 & 0\\
+ $\frac{1}{5}$ & 1 - 4 & -1.39\\
+ $\frac{4}{5}$ & 4 - 1 & 1.39\\
+ \hline
+\end{tabular}
+
+<<>>=
+chd <- rbind(
+c(17, 274, 0, 0, 0),
+c(15, 122, 0, 1, 0),
+c(7, 59, 0 ,0, 1),
+c(5,32,0,1,1),
+c(1,8,1,9,9),
+c(9,39,1,1,0),
+c(3,17,1,0,1),
+c(14,58,1,1,1)
+)
+colnames(chd) <- c('CHD','nRisk','Cat','agegrp','abECG')
+tmt <- seq(8)
+chd <- cbind(chd,tmt)
+@
+
+Cell means model
+<<CellMeans,tidy=FALSE>>=
+mdl <- ' model {
+    for (i in 1:8) {
+        CHD[i] ~ dbin(p[i], nRisk[i]);
+            logit(p[i]) <- b[tmt[i]];
+            b[i] ~ dnorm(0, .1);
+    }
+}
+'
+writeLines(mdl,'code/LogitBinomial.jags')
+@
+<<>>=
+CHD <- chd[,1]
+nRisk <- chd[,2]
+tmt <- chd[,6]
+
+jags.data   <- c('CHD', 'nRisk', 'tmt')
+jags.params <- c('b')
+
+# innits <- list(list('p' <- runif(8,0,1)))
+
+logit.jags <- jags(data=jags.data,
+                  parameters.to.save=jags.params,
+                  model.file='code/LogitBinomial.jags',
+                  n.iter=12000, n.burnin=2000,
+                  n.chains=1, n.thin=1)
+@
+% section logistic_regression (end)
 \end{document}
