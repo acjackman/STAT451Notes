@@ -1590,6 +1590,9 @@ c(14,58,1,1,1)
 colnames(chd) <- c('CHD','nRisk','Cat','agegrp','abECG')
 tmt <- seq(8)
 chd <- cbind(chd,tmt)
+CHD <- chd[,1]
+nRisk <- chd[,2]
+tmt <- chd[,6]
 @
 
 Cell means model
@@ -1605,10 +1608,6 @@ mdl <- ' model {
 writeLines(mdl,'code/LogitBinomial.jags')
 @
 <<>>=
-CHD <- chd[,1]
-nRisk <- chd[,2]
-tmt <- chd[,6]
-
 jags.data   <- c('CHD', 'nRisk', 'tmt')
 jags.params <- c('b')
 
@@ -1619,6 +1618,138 @@ logit.jags <- jags(data=jags.data,
                   model.file='code/LogitBinomial.jags',
                   n.iter=12000, n.burnin=2000,
                   n.chains=1, n.thin=1)
+@
+\renewcommand{\dateTaken}{March 14, 2013}
+\daysep
+\begin{align*}
+    \text{logit}(p_{i})&=b_{i}\\
+    \log(\frac{p_{i}}{1-p_{i}})&=b_{i}\\
+    \frac{p_{i}}{1-p_{i}}&=e^{b_{i}}\\
+    p_{i} &= e^{b_{i}}-pe^{b_{i}}\\
+    p_{i} + p_{i}e^{b_{i}}&=e^{b_{i}}\\
+    p_{i} &= \frac{e^{b_{i}}}{1+e^{b_{i}}} \frac{e^{-b_{i}}}{e^{-b_{i}}}\\
+    p_{i} &= \frac{1}{e^{-b_{i}+1}}\\
+\end{align*}
+<<>>=
+logit.sim <- as.mcmc(logit.jags)
+p1 <- 1/(exp(-logit.sim [,1])+1)
+plot(density(p1))
+@
+<<>>=
+jags.params <- c('b','p')
+logit.jags <- jags(data=jags.data,
+                  parameters.to.save=jags.params,
+                  model.file='code/LogitBinomial.jags',
+                  n.iter=12000, n.burnin=2000,
+                  n.chains=1, n.thin=1)
+logit.sim <- as.mcmc(logit.jags)
+@
+factorial design 
+
+Cat-N
+\begin{tabular}{cccc}
+      &  & abEUG & \\
+      &  & Y & O\\
+abECG & N & $\mu_1$ & $\mu_2$ \\
+      & Y & $\mu_3$ & $\mu_4$ \\
+\end{tabular}
+
+Cat-Y
+\begin{tabular}{cccc}
+      &  & abEUG & \\
+      &  & Y & O\\
+abECG & N & $\mu_5$ & $\mu_6$ \\
+      & Y & $\mu_7$ & $\mu_8$ \\
+\end{tabular}
+
+To find the marginals for cat
+\begin{align}
+    \text{Cat-n} = \frac{\mu_1+\mu_2+\mu_3+\mu_4}{4}
+    \text{Cat-y} = \frac{\mu_1+\mu_2+\mu_3+\mu_4}{4}
+\end{align}
+% Dr Reese came to class today
+% \begin{itemize}
+%     \item B is a log of an odds
+%     \item B is a ratio
+% \end{itemize}
+<<>>=
+p1 <- logit.sim[,10]
+p2 <- logit.sim[,11]
+p3 <- logit.sim[,12]
+p4 <- logit.sim[,13]
+p5 <- logit.sim[,14]
+p6 <- logit.sim[,15]
+p7 <- logit.sim[,16]
+p8 <- logit.sim[,17]
+@
+Find the marginals
+<<>>=
+catno <- (p1+p2+p3+p4)/4
+catyes <- (p5+p6+p7+p8)/4
+plot(density(catno), xlim=c(.05,.4), lwd=2)
+lines(density(catyes), lwd=2, col='red')
+
+young <- (p1+p3+p5+p7)/4
+old <- (p2+p4+p6+p8)/4
+plot(density(young), xlim=c(.05,.4), ylim=c(0,15), lwd=2)
+lines(density(old), lwd=2, col='red')
+
+abNo <- (p1+p2+p5+p6)/4
+abYes <- (p3+p4+p7+p8)/4
+@
+
+To compare old to young we use an odds ratio or a risk ratio
+<<out.width='\\textwidth'>>=
+ORage <- (old/(1-old))/(young/(1-young))
+mean(ORage>1)
+
+RRage <- old/young
+mean(RRage>1)
+
+ORab <- (abYes/(1-abYes))/(abNo/(1-abNo))
+ORCat <- (catyes/(1-catyes))/(catno/(1-catno))
+
+mean(ORab)
+mean(ORCat)
+par(mfrow=c(2,2))
+xlims <- c(0,0.5)
+ylims <- c(0,20)
+plot(density(catno), xlim=xlims, ylim=ylims)
+lines(density(catyes), col='blue')
+plot(density(abNo), xlim=xlims, ylim=ylims)
+lines(density(abYes), col='blue')
+plot(density(young), xlim=xlims, ylim=ylims)
+lines(density(old), col='blue')
+par(mfrow=c(1,1))
+@
+
+two way interaction for abnormal ECG and age averaged over catacolamines
+\begin{align*}
+    \mu_{1} + \mu_{5} - \mu_{2} - \mu_{6} - \mu_{3} - \mu_{7} + \mu_{4} + \mu_{8} = 0
+\end{align*}
+
+to average across abnormal ECG, rewrite the tables
+abECG-N
+\begin{tabular}{cccc}
+      &  & abEUG & \\
+      &  & Y & O\\
+Cat   & N & $\mu_1$ & $\mu_2$ \\
+      & Y & $\mu_5$ & $\mu_6$ \\
+\end{tabular}
+
+abECG-Y
+\begin{tabular}{cccc}
+      &  & abEUG & \\
+      &  & Y & O\\
+Cat   & N & $\mu_3$ & $\mu_4$ \\
+      & Y & $\mu_7$ & $\mu_8$ \\
+\end{tabular}
+\begin{align*}
+    \mu_{1} + \mu_{3} - \mu_{2} - \mu_{4} - \mu_{5} - \mu_{7} + \mu_{6} + \mu_{8} = 0
+\end{align*}
+<<>>=
+intageab <- p1+p5-p2-p6-p3-p7+p4+p8
+plot(density(intageab))
 @
 % section logistic_regression (end)
 \end{document}

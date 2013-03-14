@@ -1,0 +1,8 @@
+ model {
+    for (i in 1:8) {
+        CHD[i] ~ dbin(p[i], nRisk[i]);
+            logit(p[i]) <- b[tmt[i]];
+            b[i] ~ dnorm(0, .1);
+    }
+}
+
