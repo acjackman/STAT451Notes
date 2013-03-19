@@ -1,0 +1,15 @@
+model {
+    for (i in 1:21) {
+        r[i] ~ dbin(p[i], n[i])
+        logit(p[i]) <- b[tmt[i]] + e[i]
+    }
+    for (i in 1:4) {
+        b[i] ~ dnorm(0, 1)
+    }
+    for (i in 1:21) {
+        e[i] ~ dnorm(0, prec)
+    }
+    s2 ~ dunif(0,2);
+    prec <- 1/s2
+}
+

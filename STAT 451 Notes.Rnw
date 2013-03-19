@@ -1576,7 +1576,7 @@ odds have a skewed distribution
  \hline
 \end{tabular}
 
-<<>>=
+<<CHDData>>=
 chd <- rbind(
 c(17, 274, 0, 0, 0),
 c(15, 122, 0, 1, 0),
@@ -1596,7 +1596,7 @@ tmt <- chd[,6]
 @
 
 Cell means model
-<<CellMeans,tidy=FALSE>>=
+<<LogitCellMeansModel,tidy=FALSE>>=
 mdl <- ' model {
     for (i in 1:8) {
         CHD[i] ~ dbin(p[i], nRisk[i]);
@@ -1607,7 +1607,7 @@ mdl <- ' model {
 '
 writeLines(mdl,'code/LogitBinomial.jags')
 @
-<<>>=
+<<LogitCellMeansSim, dependson=c('LogitCellMeansModel','CHDData')>>=
 jags.data   <- c('CHD', 'nRisk', 'tmt')
 jags.params <- c('b')
 
@@ -1751,5 +1751,164 @@ Cat   & N & $\mu_3$ & $\mu_4$ \\
 intageab <- p1+p5-p2-p6-p3-p7+p4+p8
 plot(density(intageab))
 @
+\renewcommand{\dateTaken}{March 19, 2013}
+\daysep
+\subsection{Logistic Regression In SAS} % (fold)
+\label{sub:logistic_regression_in_sas}
+
+JAGS freefloating, SAS contstrained
+
+\begin{tabular}{cccc}
+\hline
+Cat-N &  & Age & \\
+      &  & Y & O\\
+ECG   & N & $p_1$, .07, .06 & $p_2$, .12, .12 \\
+      & Y & $p_3$, .10, .12 & $p_4$, .16, .16 \\
+      \hline
+\end{tabular}
+
+\begin{tabular}{cccc}
+\hline
+Cat-Y &  & Age & \\
+      &  & Y & O\\
+ECG   & N & $p_5$, .12, .15 & $p_6$, .20, .23 \\
+      & Y & $p_7$, .17, .18& $p_8$,  .26, .24\\
+      \hline
+\end{tabular}
+
+SAS:
+\begin{align*}
+\log\left(\frac{p}{1-p}\right) & =\beta_{0}+\beta_{\text{cat}}+\beta_{\text{age}}+\beta_{\text{ecg}}\\
+    p & =\frac{1}{1+e^{-x\beta}}\\
+    p_{5} &= \frac{1}{1+e^{-\beta_{0}-\beta_{\text{cat}}}}
+\end{align*}
+This model has 4 degrees of freedom
+
+\begin{align*}
+    X = \begin{bmatrix}
+        1 & 0 & 0 & 0\\
+        1 & 0 & 1 & 0\\
+        1 & 0 & 0 & 1\\
+        1 & 0 & 1 & 1\\
+        1 & 1 & 0 & 0\\
+        1 & 1 & 1 & 0\\
+        1 & 1 & 0 & 1\\
+        1 & 1 & 1 & 1\\
+    \end{bmatrix}
+\end{align*}
+<<>>=
+1/(1+exp(2.6263-.6199))
+@
+
+JAGS Model
+\begin{align*}
+    \log\left(\frac{p_{i}}{1-p_{i}}\right)=b_{i}\qquad i=\{1,\ldots,8\}
+\end{align*}
+this model has 8 degrees of freedom
+
+<<LogitReducedModel, tidy=FALSE>>=
+mdl <- ' model {
+    for (i in 1:8) {
+        CHD[i] ~ dbin(p[i], nRisk[i]);
+            logit(p[i]) <- bint + bcat*cat[i] + bage*age[i] + becg*ecg[i];
+    }
+    
+    bint ~ dnorm(0, .1);
+    bcat ~ dnorm(0, .1);
+    bage ~ dnorm(0, .1);
+    becg ~ dnorm(0, .1);
+}
+'
+writeLines(mdl,'code/LogitReducedModel.jags')
+@
+<<LogitReducedSim, dependson=c('LogitReducedModel','CHDData')>>=
+CHD <- chd[,1] 
+nRisk <- chd[,2]
+tmt <- chd[,6]
+cat <- chd[,3]
+age <- chd[,4]
+ecg <- chd[,5]
+
+jags.data   <- c('CHD', 'nRisk', 'cat','age','ecg')
+jags.params <- c('bint', 'bcat', 'bage','becg','p')
+
+set.seed(12)
+logit.jags <- jags(data=jags.data,
+                  parameters.to.save=jags.params,
+                  model.file='code/LogitReducedModel.jags',
+                  n.iter=12000, n.burnin=2000,
+                  n.chains=1, n.thin=1)
+@
+SAS's Deviance is calculate as $\text{Dbar}-\text{Dmean}$
+
+computing $pD=\frac{\var(\text{deviance})}{2}$ is a better way to calculate it in general
+% subsection logistic_regression_in_sas (end)
+\subsection{Random Effects} % (fold)
+\label{sub:random_effects}
+<<SeedNewData>>=
+seeds <- read.table("data/seednew.dat", stringsAsFactors = FALSE, skip=1, col.names=c("r","n","tmt","nseed","ntype"))
+sum(seeds$n[seeds$tmt==1])
+sum(seeds$r[seeds$tmt==1])
+
+var(seeds$r[seeds$tmt==1])
+@
+Is the variability reasonable?
+
+<<LogitMixedModel, tidy=FALSE>>=
+mdl <- 'model {
+    for (i in 1:21) {
+        r[i] ~ dbin(p[i], n[i])
+        logit(p[i]) <- b[tmt[i]] + e[i]
+    }
+
+    for (i in 1:4) {
+        b[i] ~ dnorm(0, 1)
+    }
+
+    for (i in 1:21) {
+        e[i] ~ dnorm(0, prec)
+    }
+
+    s2 ~ dunif(0,2);
+    prec <- 1/s2
+}
+'
+writeLines(mdl, 'code/LogitMixedModel.jags')
+mdl <- 'model {
+    for (i in 1:21) {
+        r[i] ~ dbin(p[i], n[i])
+        logit(p[i]) <- b[tmt[i]]
+    }
+
+    for (i in 1:4) {
+        b[i] ~ dnorm(0, 1)
+    }
+}
+'
+writeLines(mdl, 'code/Logit09Simplified.jags')
+@
+<<LogitMixedModelSim, dependson=c('LogitMixedModel')>>=
+r <- seeds[,1]
+n <- seeds[,2]
+tmt <- seeds[,3]
+jags.data <- c('r','n','tmt')
+jags.params <- c('b','e')
+
+seed.jags <- jags(data=jags.data,
+                  parameters.to.save=jags.params,
+                  model.file='code/LogitMixedModel.jags',
+                  n.iter=12000, n.burnin=2000,
+                  n.chains=1, n.thin=1)
+
+jags.params <- c('b')
+seedsimple.jags <- jags(data=jags.data,
+                  parameters.to.save=jags.params,
+                  model.file='code/Logit09Simplified.jags',
+                  n.iter=12000, n.burnin=2000,
+                  n.chains=1, n.thin=1)
+seed.jags
+seedsimple.jags
+@
+% subsection random_effects (end)
 % section logistic_regression (end)
 \end{document}

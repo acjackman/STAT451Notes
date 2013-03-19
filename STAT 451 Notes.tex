@@ -2571,4 +2571,463 @@ run;
 ods html close;
 \end{lstlisting}
 % section hierarchical_models (end)
+\renewcommand{\dateTaken}{March 12, 2013}
+\daysep
+
+\section{Exam Debriefing} % (fold)
+\label{sec:exam_debriefing}
+Covergence Diagnostics should have included:
+\begin{itemize}
+    \item Traceplots
+    \item Autocorrelation
+    \item Effective sample size
+    \item Raftery-lewis
+\end{itemize}
+Model should have been a model with six means and six variances
+
+\begin{tabular}{cccccc}
+ &  &   & Gain & &\\
+ &  & 1 & 2    & 3 &\\
+ Duration & 1 &$\mu_{1}$ & $\mu_{2}$& $\mu_{3}$ & $\frac{\mu_{1}+\mu_{2}+\mu_{3}}{3}$ \\
+ & 2 &$\mu_{4}$ & $\mu_{5}$& $\mu_{6}$&$\frac{\mu_{4}+\mu_{5}+\mu_{6}}{3}$ \\
+ & & $\frac{\mu_{1}+\mu{4}}{2}$ & $\frac{\mu_{2}+\mu{5}}{2}$ & $\frac{\mu_{3}+\mu{6}}{2}$ &
+\end{tabular}
+
+Next exam will probably have
+\begin{itemize}
+    \item a random effects and or hierarchal model
+    \item Non-normal likelihood
+\end{itemize}
+% section exam_debriefing (end)
+\section{Logistic Regression} % (fold)
+\label{sec:logistic_regression}
+What we have done so far:
+\begin{itemize}
+    \item ANOVA
+    \item Regression
+    \item ANCOVA --- Both Categorical and Continuous predictors
+    \item Mixed --- More than one source of variability
+\end{itemize}
+
+\begin{tabular}{c c| c c}
+ &  & \textbf{Response} & \\
+ &  & Categorical & Continuous \\
+ \hline
+ \textbf{Predictors} & Categorical & & ANOVA \\
+ & Continuous & & Regression
+\end{tabular}
+
+$y=\binomd(n,\pi)$, with $0 \le \pi \le 1$
+
+Odds: $\frac{\pi}{1-\pi}$
+
+Sports ``3 to 1'' is 3 failures for every one success or $\pi=.25$
+
+$Odds > 0$, 1 should be the midpoint
+
+odds have a skewed distribution
+
+\begin{tabular}{c|c|c}
+ \hline
+ probability & Odds & $\log(\text{Odds)}$\\
+ $\pi$ & Success-Failure & $\log(S/F)$\\
+ \hline
+ $\frac{1}{5}$ & 1 - 1 & 0\\
+ $\frac{1}{5}$ & 1 - 4 & -1.39\\
+ $\frac{4}{5}$ & 4 - 1 & 1.39\\
+ \hline
+\end{tabular}
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+chd <- \hlfunctioncall{rbind}(\hlfunctioncall{c}(17, 274, 0, 0, 0), \hlfunctioncall{c}(15, 122, 0, 1, 0), \hlfunctioncall{c}(7, 59, 0, 0, 1), \hlfunctioncall{c}(5, 32, 
+    0, 1, 1), \hlfunctioncall{c}(1, 8, 1, 9, 9), \hlfunctioncall{c}(9, 39, 1, 1, 0), \hlfunctioncall{c}(3, 17, 1, 0, 1), \hlfunctioncall{c}(14, 58, 1, 
+    1, 1))
+\hlfunctioncall{colnames}(chd) <- \hlfunctioncall{c}(\hlstring{"CHD"}, \hlstring{"nRisk"}, \hlstring{"Cat"}, \hlstring{"agegrp"}, \hlstring{"abECG"})
+tmt <- \hlfunctioncall{seq}(8)
+chd <- \hlfunctioncall{cbind}(chd, tmt)
+CHD <- chd[, 1]
+nRisk <- chd[, 2]
+tmt <- chd[, 6]
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+
+Cell means model
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+mdl <- ' model \{
+    \hlfunctioncall{for} (i in 1:8) \{
+        CHD[i] ~ \hlfunctioncall{dbin}(p[i], nRisk[i]);
+            \hlfunctioncall{logit}(p[i]) <- b[tmt[i]];
+            b[i] ~ \hlfunctioncall{dnorm}(0, .1);
+    \}
+\}
+'
+\hlfunctioncall{writeLines}(mdl,\hlstring{'code/LogitBinomial.jags'})
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+jags.data <- \hlfunctioncall{c}(\hlstring{"CHD"}, \hlstring{"nRisk"}, \hlstring{"tmt"})
+jags.params <- \hlfunctioncall{c}(\hlstring{"b"})
+
+\hlcomment{# innits <- list(list('p' <- runif(8,0,1)))}
+
+logit.jags <- \hlfunctioncall{jags}(data = jags.data, parameters.to.save = jags.params, model.file = \hlstring{"code/LogitBinomial.jags"}, 
+    n.iter = 12000, n.burnin = 2000, n.chains = 1, n.thin = 1)
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# module glm loaded}}\begin{verbatim}
+## Compiling model graph
+##    Resolving undeclared variables
+##    Allocating nodes
+##    Graph Size: 42
+## 
+## Initializing model
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\renewcommand{\dateTaken}{March 14, 2013}
+\daysep
+\begin{align*}
+    \text{logit}(p_{i})&=b_{i}\\
+    \log(\frac{p_{i}}{1-p_{i}})&=b_{i}\\
+    \frac{p_{i}}{1-p_{i}}&=e^{b_{i}}\\
+    p_{i} &= e^{b_{i}}-pe^{b_{i}}\\
+    p_{i} + p_{i}e^{b_{i}}&=e^{b_{i}}\\
+    p_{i} &= \frac{e^{b_{i}}}{1+e^{b_{i}}} \frac{e^{-b_{i}}}{e^{-b_{i}}}\\
+    p_{i} &= \frac{1}{e^{-b_{i}+1}}\\
+\end{align*}
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+logit.sim <- \hlfunctioncall{as.mcmc}(logit.jags)
+p1 <- 1/(\hlfunctioncall{exp}(-logit.sim[, 1]) + 1)
+\hlfunctioncall{plot}(\hlfunctioncall{density}(p1))
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-47} 
+
+}
+
+
+
+\end{knitrout}
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+jags.params <- \hlfunctioncall{c}(\hlstring{"b"}, \hlstring{"p"})
+logit.jags <- \hlfunctioncall{jags}(data = jags.data, parameters.to.save = jags.params, model.file = \hlstring{"code/LogitBinomial.jags"}, 
+    n.iter = 12000, n.burnin = 2000, n.chains = 1, n.thin = 1)
+\end{alltt}
+\begin{verbatim}
+## Compiling model graph
+##    Resolving undeclared variables
+##    Allocating nodes
+##    Graph Size: 42
+## 
+## Initializing model
+\end{verbatim}
+\begin{alltt}
+logit.sim <- \hlfunctioncall{as.mcmc}(logit.jags)
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+factorial design 
+
+Cat-N
+\begin{tabular}{cccc}
+      &  & abEUG & \\
+      &  & Y & O\\
+abECG & N & $\mu_1$ & $\mu_2$ \\
+      & Y & $\mu_3$ & $\mu_4$ \\
+\end{tabular}
+
+Cat-Y
+\begin{tabular}{cccc}
+      &  & abEUG & \\
+      &  & Y & O\\
+abECG & N & $\mu_5$ & $\mu_6$ \\
+      & Y & $\mu_7$ & $\mu_8$ \\
+\end{tabular}
+
+To find the marginals for cat
+\begin{align}
+    \text{Cat-n} = \frac{\mu_1+\mu_2+\mu_3+\mu_4}{4}
+    \text{Cat-y} = \frac{\mu_1+\mu_2+\mu_3+\mu_4}{4}
+\end{align}
+% Dr Reese came to class today
+% \begin{itemize}
+%     \item B is a log of an odds
+%     \item B is a ratio
+% \end{itemize}
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+p1 <- logit.sim[, 10]
+p2 <- logit.sim[, 11]
+p3 <- logit.sim[, 12]
+p4 <- logit.sim[, 13]
+p5 <- logit.sim[, 14]
+p6 <- logit.sim[, 15]
+p7 <- logit.sim[, 16]
+p8 <- logit.sim[, 17]
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+Find the marginals
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+catno <- (p1 + p2 + p3 + p4)/4
+catyes <- (p5 + p6 + p7 + p8)/4
+\hlfunctioncall{plot}(\hlfunctioncall{density}(catno), xlim = \hlfunctioncall{c}(0.05, 0.4), lwd = 2)
+\hlfunctioncall{lines}(\hlfunctioncall{density}(catyes), lwd = 2, col = \hlstring{"red"})
+
+young <- (p1 + p3 + p5 + p7)/4
+old <- (p2 + p4 + p6 + p8)/4
+\hlfunctioncall{plot}(\hlfunctioncall{density}(young), xlim = \hlfunctioncall{c}(0.05, 0.4), ylim = \hlfunctioncall{c}(0, 15), lwd = 2)
+\hlfunctioncall{lines}(\hlfunctioncall{density}(old), lwd = 2, col = \hlstring{"red"})
+
+abNo <- (p1 + p2 + p5 + p6)/4
+abYes <- (p3 + p4 + p7 + p8)/4
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-501} 
+\includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-502} 
+
+}
+
+
+
+\end{knitrout}
+
+
+To compare old to young we use an odds ratio or a risk ratio
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+ORage <- (old/(1 - old))/(young/(1 - young))
+\hlfunctioncall{mean}(ORage > 1)
+\end{alltt}
+\begin{verbatim}
+## [1] 0.9027
+\end{verbatim}
+\begin{alltt}
+
+RRage <- old/young
+\hlfunctioncall{mean}(RRage > 1)
+\end{alltt}
+\begin{verbatim}
+## [1] 0.9027
+\end{verbatim}
+\begin{alltt}
+
+ORab <- (abYes/(1 - abYes))/(abNo/(1 - abNo))
+ORCat <- (catyes/(1 - catyes))/(catno/(1 - catno))
+
+\hlfunctioncall{mean}(ORab)
+\end{alltt}
+\begin{verbatim}
+## [1] 1.402
+\end{verbatim}
+\begin{alltt}
+\hlfunctioncall{mean}(ORCat)
+\end{alltt}
+\begin{verbatim}
+## [1] 2.001
+\end{verbatim}
+\begin{alltt}
+\hlfunctioncall{par}(mfrow = \hlfunctioncall{c}(2, 2))
+xlims <- \hlfunctioncall{c}(0, 0.5)
+ylims <- \hlfunctioncall{c}(0, 20)
+\hlfunctioncall{plot}(\hlfunctioncall{density}(catno), xlim = xlims, ylim = ylims)
+\hlfunctioncall{lines}(\hlfunctioncall{density}(catyes), col = \hlstring{"blue"})
+\hlfunctioncall{plot}(\hlfunctioncall{density}(abNo), xlim = xlims, ylim = ylims)
+\hlfunctioncall{lines}(\hlfunctioncall{density}(abYes), col = \hlstring{"blue"})
+\hlfunctioncall{plot}(\hlfunctioncall{density}(young), xlim = xlims, ylim = ylims)
+\hlfunctioncall{lines}(\hlfunctioncall{density}(old), col = \hlstring{"blue"})
+\hlfunctioncall{par}(mfrow = \hlfunctioncall{c}(1, 1))
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=\textwidth]{figure/graphic-unnamed-chunk-51} 
+
+}
+
+
+
+\end{knitrout}
+
+
+two way interaction for abnormal ECG and age averaged over catacolamines
+\begin{align*}
+    \mu_{1} + \mu_{5} - \mu_{2} - \mu_{6} - \mu_{3} - \mu_{7} + \mu_{4} + \mu_{8} = 0
+\end{align*}
+
+to average across abnormal ECG, rewrite the tables
+abECG-N
+\begin{tabular}{cccc}
+      &  & abEUG & \\
+      &  & Y & O\\
+Cat   & N & $\mu_1$ & $\mu_2$ \\
+      & Y & $\mu_5$ & $\mu_6$ \\
+\end{tabular}
+
+abECG-Y
+\begin{tabular}{cccc}
+      &  & abEUG & \\
+      &  & Y & O\\
+Cat   & N & $\mu_3$ & $\mu_4$ \\
+      & Y & $\mu_7$ & $\mu_8$ \\
+\end{tabular}
+\begin{align*}
+    \mu_{1} + \mu_{3} - \mu_{2} - \mu_{4} - \mu_{5} - \mu_{7} + \mu_{6} + \mu_{8} = 0
+\end{align*}
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+intageab <- p1 + p5 - p2 - p6 - p3 - p7 + p4 + p8
+\hlfunctioncall{plot}(\hlfunctioncall{density}(intageab))
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-52} 
+
+}
+
+
+
+\end{knitrout}
+
+\renewcommand{\dateTaken}{March 19, 2013}
+\daysep
+\subsection{Logistic Regression In SAS} % (fold)
+\label{sub:logistic_regression_in_sas}
+
+JAGS freefloating, SAS contstrained
+
+\begin{tabular}{cccc}
+\hline
+Cat-N &  & Age & \\
+      &  & Y & O\\
+ECG   & N & $p_1$, .07, .06 & $p_2$, .12, .12 \\
+      & Y & $p_3$, .10, .12 & $p_4$, .16, .16 \\
+      \hline
+\end{tabular}
+
+\begin{tabular}{cccc}
+\hline
+Cat-Y &  & Age & \\
+      &  & Y & O\\
+ECG   & N & $p_5$, .12, .15 & $p_6$, .20, .23 \\
+      & Y & $p_7$, .17, .18& $p_8$,  .26, .24\\
+      \hline
+\end{tabular}
+
+SAS:
+\begin{align*}
+\log\left(\frac{p}{1-p}\right) & =\beta_{0}+\beta_{\text{cat}}+\beta_{\text{age}}+\beta_{\text{ecg}}\\
+    p & =\frac{1}{1+e^{-x\beta}}\\
+    p_{5} &= \frac{1}{1+e^{-\beta_{0}-\beta_{\text{cat}}}}
+\end{align*}
+This model has 4 degrees of freedom
+
+\begin{align*}
+    X = \begin{bmatrix}
+        1 & 0 & 0 & 0\\
+        1 & 0 & 1 & 0\\
+        1 & 0 & 0 & 1\\
+        1 & 0 & 1 & 1\\
+        1 & 1 & 0 & 0\\
+        1 & 1 & 1 & 0\\
+        1 & 1 & 0 & 1\\
+        1 & 1 & 1 & 1\\
+    \end{bmatrix}
+\end{align*}
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+1/(1 + \hlfunctioncall{exp}(2.6263 - 0.6199))
+\end{alltt}
+\begin{verbatim}
+## [1] 0.1185
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+
+JAGS Model
+\begin{align*}
+    \log\left(\frac{p_{i}}{1-p_{i}}\right)=b_{i}\qquad i=\{1,\ldots,8\}
+\end{align*}
+this model has 8 degrees of freedom
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+mdl <- ' model \{
+    \hlfunctioncall{for} (i in 1:8) \{
+        CHD[i] ~ \hlfunctioncall{dbin}(p[i], nRisk[i]);
+            \hlfunctioncall{logit}(p[i]) <- bint + bcat*cat[i] + bage*age[i] + becg*ecg[i];
+    \}
+    
+    bint ~ \hlfunctioncall{dnorm}(0, .1);
+    bcat ~ \hlfunctioncall{dnorm}(0, .1);
+    bage ~ \hlfunctioncall{dnorm}(0, .1);
+    becg ~ \hlfunctioncall{dnorm}(0, .1);
+\}
+'
+\hlfunctioncall{writeLines}(mdl,\hlstring{'code/LogitReducedModel.jags'})
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+CHD <- chd[, 1]
+nRisk <- chd[, 2]
+tmt <- chd[, 6]
+cat <- chd[, 3]
+age <- chd[, 4]
+ecg <- chd[, 5]
+
+jags.data <- \hlfunctioncall{c}(\hlstring{"CHD"}, \hlstring{"nRisk"}, \hlstring{"cat"}, \hlstring{"age"}, \hlstring{"ecg"})
+jags.params <- \hlfunctioncall{c}(\hlstring{"bint"}, \hlstring{"bcat"}, \hlstring{"bage"}, \hlstring{"becg"}, \hlstring{"p"})
+
+\hlfunctioncall{set.seed}(12)
+logit.jags <- \hlfunctioncall{jags}(data = jags.data, parameters.to.save = jags.params, model.file = \hlstring{"code/LogitReducedModel.jags"}, 
+    n.iter = 12000, n.burnin = 2000, n.chains = 1, n.thin = 1)
+\end{alltt}
+\begin{verbatim}
+## Compiling model graph
+##    Resolving undeclared variables
+##    Allocating nodes
+##    Graph Size: 70
+## 
+## Initializing model
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+SAS's Deviance is calculate as $\text{Dbar}-\text{Dmean}$
+
+computing $pD=\frac{\var(\text{deviance})}{2}$ is a better way to calculate it in general
+% subsection logistic_regression_in_sas (end)
+% section logistic_regression (end)
 \end{document}
