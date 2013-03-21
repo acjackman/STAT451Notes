@@ -1,0 +1,18 @@
+ model {
+    for (i in 1:N) {
+        y[i] ~ dnorm(mu[i], s2err)
+        mu[i] <- b_0[tmt[i]] + b_1[tmt[i]]*time[i] + u_0[sbj[i]] + u_1[sbj[i]]*time[i]
+    }
+    for (i in 1:3){
+        b_0[i] ~ dnorm(83, 0.01)
+        b_1[i] ~ dnorm(0, 0.1)
+    }
+    for (i in 1:N_sbj){
+        u_0[i] ~ dnorm(0, s2int)
+        u_1[i] ~ dnorm(0, s2slp)
+    }
+    s2err ~ dgamma(2.2, 0.3)
+    s2int ~ dgamma(1.1, .1)
+    s2slp ~ dgamma(1.1, 2)
+}
+
