@@ -1868,7 +1868,6 @@ mdl <- 'model {
     for (i in 1:21) {
         e[i] ~ dnorm(0, prec)
     }
-
     s2 ~ dunif(0,2);
     prec <- 1/s2
 }
@@ -1910,5 +1909,31 @@ seed.jags
 seedsimple.jags
 @
 % subsection random_effects (end)
+\renewcommand{\dateTaken}{March 21, 2013}
+\daysep
+\lstinsertlisting[language=SAS]{2013-03-21_SAS.sas}
 % section logistic_regression (end)
+\section{Poisson Likelihood} % (fold)
+\label{sec:poisson_likelihood}
+11epi.dat Epilepsy 
+\begin{itemize}
+    \item ``pid'' --- Patient ID
+    \item ``scount'' --- Seizure Count 
+    \item ``tmt'' --- Treatment
+    \item ``base'' --- Base Effect
+    \item ``age'' --- Age
+    \item ``visit'' 
+\end{itemize}
+
+$S$ is the number of seizures (scount)
+\begin{align*}
+    S_{i} &\sim \poisd(\lambda)\\
+    \lambda = a_{0} + a_{\text{age}}*\text{age}_{i} + a_{\text{tmt}}*\text{tmt}_{i} + a_{\text{base}}*\text{base}_{i}
+\end{align*}
+
+<<>>=
+epi <- read.table('11epi.dat', col.names=c("pid", "scount", "tmt", "base", "age", "visit"))
+
+@
+% section poisson_likelihood (end)
 \end{document}

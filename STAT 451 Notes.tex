@@ -3029,5 +3029,190 @@ SAS's Deviance is calculate as $\text{Dbar}-\text{Dmean}$
 
 computing $pD=\frac{\var(\text{deviance})}{2}$ is a better way to calculate it in general
 % subsection logistic_regression_in_sas (end)
+\subsection{Random Effects} % (fold)
+\label{sub:random_effects}
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+seeds <- \hlfunctioncall{read.table}(\hlstring{"data/seednew.dat"}, stringsAsFactors = FALSE, skip = 1, col.names = \hlfunctioncall{c}(\hlstring{"r"}, 
+    \hlstring{"n"}, \hlstring{"tmt"}, \hlstring{"nseed"}, \hlstring{"ntype"}))
+\hlfunctioncall{sum}(seeds$n[seeds$tmt == 1])
+\end{alltt}
+\begin{verbatim}
+## [1] 272
+\end{verbatim}
+\begin{alltt}
+\hlfunctioncall{sum}(seeds$r[seeds$tmt == 1])
+\end{alltt}
+\begin{verbatim}
+## [1] 99
+\end{verbatim}
+\begin{alltt}
+
+\hlfunctioncall{var}(seeds$r[seeds$tmt == 1])
+\end{alltt}
+\begin{verbatim}
+## [1] 40.7
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Is the variability reasonable?
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+mdl <- 'model \{
+    \hlfunctioncall{for} (i in 1:21) \{
+        r[i] ~ \hlfunctioncall{dbin}(p[i], n[i])
+        \hlfunctioncall{logit}(p[i]) <- b[tmt[i]] + e[i]
+    \}
+
+    \hlfunctioncall{for} (i in 1:4) \{
+        b[i] ~ \hlfunctioncall{dnorm}(0, 1)
+    \}
+
+    \hlfunctioncall{for} (i in 1:21) \{
+        e[i] ~ \hlfunctioncall{dnorm}(0, prec)
+    \}
+    s2 ~ \hlfunctioncall{dunif}(0,2);
+    prec <- 1/s2
+\}
+'
+\hlfunctioncall{writeLines}(mdl, \hlstring{'code/LogitMixedModel.jags'})
+mdl <- 'model \{
+    \hlfunctioncall{for} (i in 1:21) \{
+        r[i] ~ \hlfunctioncall{dbin}(p[i], n[i])
+        \hlfunctioncall{logit}(p[i]) <- b[tmt[i]]
+    \}
+
+    \hlfunctioncall{for} (i in 1:4) \{
+        b[i] ~ \hlfunctioncall{dnorm}(0, 1)
+    \}
+\}
+'
+\hlfunctioncall{writeLines}(mdl, \hlstring{'code/Logit09Simplified.jags'})
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+r <- seeds[, 1]
+n <- seeds[, 2]
+tmt <- seeds[, 3]
+jags.data <- \hlfunctioncall{c}(\hlstring{"r"}, \hlstring{"n"}, \hlstring{"tmt"})
+jags.params <- \hlfunctioncall{c}(\hlstring{"b"}, \hlstring{"e"})
+
+seed.jags <- \hlfunctioncall{jags}(data = jags.data, parameters.to.save = jags.params, model.file = \hlstring{"code/LogitMixedModel.jags"}, 
+    n.iter = 12000, n.burnin = 2000, n.chains = 1, n.thin = 1)
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# module glm loaded}}\begin{verbatim}
+## Compiling model graph
+##    Resolving undeclared variables
+##    Allocating nodes
+##    Graph Size: 135
+## 
+## Initializing model
+\end{verbatim}
+\begin{alltt}
+
+jags.params <- \hlfunctioncall{c}(\hlstring{"b"})
+seedsimple.jags <- \hlfunctioncall{jags}(data = jags.data, parameters.to.save = jags.params, model.file = \hlstring{"code/Logit09Simplified.jags"}, 
+    n.iter = 12000, n.burnin = 2000, n.chains = 1, n.thin = 1)
+\end{alltt}
+\begin{verbatim}
+## Compiling model graph
+##    Resolving undeclared variables
+##    Allocating nodes
+##    Graph Size: 73
+## 
+## Initializing model
+\end{verbatim}
+\begin{alltt}
+seed.jags
+\end{alltt}
+\begin{verbatim}
+## Inference for Bugs model at "code/LogitMixedModel.jags", fit using jags,
+##  1 chains, each with 12000 iterations (first 2000 discarded)
+##  n.sims = 10000 iterations saved
+##          mu.vect sd.vect   2.5%    25%    50%     75%   97.5%
+## b[1]      -0.522   0.221 -0.948 -0.665 -0.525  -0.385  -0.068
+## b[2]       0.816   0.221  0.384  0.676  0.808   0.953   1.270
+## b[3]      -0.457   0.268 -1.008 -0.625 -0.446  -0.281   0.041
+## b[4]       0.017   0.254 -0.507 -0.143  0.028   0.186   0.503
+## e[1]      -0.287   0.298 -0.937 -0.466 -0.264  -0.082   0.232
+## e[2]      -0.016   0.265 -0.559 -0.177 -0.010   0.149   0.506
+## e[3]      -0.271   0.268 -0.846 -0.436 -0.252  -0.086   0.207
+## e[4]       0.338   0.289 -0.174  0.136  0.318   0.518   0.946
+## e[5]       0.144   0.282 -0.401 -0.035  0.134   0.314   0.728
+## e[6]       0.113   0.381 -0.585 -0.128  0.086   0.329   0.948
+## e[7]       0.068   0.261 -0.442 -0.099  0.061   0.230   0.605
+## e[8]       0.233   0.276 -0.264  0.045  0.213   0.403   0.820
+## e[9]      -0.171   0.275 -0.748 -0.347 -0.157   0.012   0.335
+## e[10]     -0.217   0.264 -0.767 -0.383 -0.204  -0.040   0.278
+## e[11]      0.128   0.350 -0.517 -0.093  0.103   0.326   0.919
+## e[12]      0.170   0.338 -0.451 -0.050  0.144   0.373   0.913
+## e[13]     -0.120   0.310 -0.766 -0.312 -0.108   0.073   0.494
+## e[14]     -0.210   0.319 -0.904 -0.406 -0.187  -0.002   0.375
+## e[15]      0.292   0.311 -0.258  0.079  0.265   0.480   0.978
+## e[16]     -0.221   0.413 -1.168 -0.433 -0.172   0.042   0.459
+## e[17]     -0.314   0.368 -1.148 -0.526 -0.275  -0.068   0.315
+## e[18]      0.088   0.292 -0.465 -0.098  0.076   0.266   0.706
+## e[19]     -0.010   0.296 -0.595 -0.192 -0.016   0.171   0.601
+## e[20]      0.302   0.301 -0.237  0.097  0.282   0.484   0.956
+## e[21]     -0.073   0.363 -0.828 -0.284 -0.062   0.148   0.641
+## deviance  98.860   5.637 88.953 94.822 98.517 102.524 110.858
+## 
+## DIC info (using the rule, pD = var(deviance)/2)
+## pD = 15.9 and DIC = 114.7
+## DIC is an estimate of expected predictive error (lower deviance is better).
+\end{verbatim}
+\begin{alltt}
+seedsimple.jags
+\end{alltt}
+\begin{verbatim}
+## Inference for Bugs model at "code/Logit09Simplified.jags", fit using jags,
+##  1 chains, each with 12000 iterations (first 2000 discarded)
+##  n.sims = 10000 iterations saved
+##          mu.vect sd.vect    2.5%     25%     50%     75%   97.5%
+## b[1]      -0.552   0.126  -0.800  -0.637  -0.551  -0.467  -0.308
+## b[2]       0.796   0.125   0.556   0.712   0.795   0.879   1.043
+## b[3]      -0.406   0.183  -0.766  -0.529  -0.404  -0.283  -0.056
+## b[4]       0.125   0.168  -0.207   0.010   0.126   0.238   0.454
+## deviance 111.575   2.873 108.077 109.515 110.875 112.916 118.965
+## 
+## DIC info (using the rule, pD = var(deviance)/2)
+## pD = 4.1 and DIC = 115.7
+## DIC is an estimate of expected predictive error (lower deviance is better).
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+% subsection random_effects (end)
+\renewcommand{\dateTaken}{March 21, 2013}
+\daysep
+\lstinsertlisting[language=SAS]{2013-03-21_SAS.sas}
 % section logistic_regression (end)
+\section{Poisson Likelihood} % (fold)
+\label{sec:poisson_likelihood}
+11epi.dat Epilepsy 
+\begin{itemize}
+    \item ``pid'' --- Patient ID
+    \item ``scount'' --- Seizure Count 
+    \item ``tmt'' --- Treatment
+    \item ``base'' --- Base Effect
+    \item ``age'' --- Age
+    \item ``visit'' 
+\end{itemize}
+
+$S$ is the number of seizures (scount)
+\begin{align*}
+    S_{i} &\sim \poisd(\lambda)\\
+    \lambda = a_{0} + a_{\text{age}}*\text{age}+ a_{\text{tmt}}*\text{tmt}+ a_{\text{base}}*\text{base}
+\end{align*}
+% section poisson_likelihood (end)
 \end{document}
