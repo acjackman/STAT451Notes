@@ -3,7 +3,7 @@
         CHD[i] ~ dbin(p[i], nRisk[i]);
             logit(p[i]) <- bint + bcat*cat[i] + bage*age[i] + becg*ecg[i];
     }
-    
+
     bint ~ dnorm(0, .1);
     bcat ~ dnorm(0, .1);
     bage ~ dnorm(0, .1);

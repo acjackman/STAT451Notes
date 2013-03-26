@@ -2745,7 +2745,7 @@ logit.sim <- \hlfunctioncall{as.mcmc}(logit.jags)
 \end{kframe}
 \end{knitrout}
 
-factorial design 
+factorial design
 
 Cat-N
 \begin{tabular}{cccc}
@@ -2985,7 +2985,7 @@ mdl <- ' model \{
         CHD[i] ~ \hlfunctioncall{dbin}(p[i], nRisk[i]);
             \hlfunctioncall{logit}(p[i]) <- bint + bcat*cat[i] + bage*age[i] + becg*ecg[i];
     \}
-    
+
     bint ~ \hlfunctioncall{dnorm}(0, .1);
     bcat ~ \hlfunctioncall{dnorm}(0, .1);
     bage ~ \hlfunctioncall{dnorm}(0, .1);
@@ -3014,7 +3014,9 @@ jags.params <- \hlfunctioncall{c}(\hlstring{"bint"}, \hlstring{"bcat"}, \hlstrin
 logit.jags <- \hlfunctioncall{jags}(data = jags.data, parameters.to.save = jags.params, model.file = \hlstring{"code/LogitReducedModel.jags"}, 
     n.iter = 12000, n.burnin = 2000, n.chains = 1, n.thin = 1)
 \end{alltt}
-\begin{verbatim}
+
+
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# module glm loaded}}\begin{verbatim}
 ## Compiling model graph
 ##    Resolving undeclared variables
 ##    Allocating nodes
@@ -3195,24 +3197,208 @@ seedsimple.jags
 % subsection random_effects (end)
 \renewcommand{\dateTaken}{March 21, 2013}
 \daysep
-\lstinsertlisting[language=SAS]{2013-03-21_SAS.sas}
+\lstinputlisting[language=SAS]{code/2013-03-21_SAS.sas}
 % section logistic_regression (end)
 \section{Poisson Likelihood} % (fold)
 \label{sec:poisson_likelihood}
-11epi.dat Epilepsy 
+11epi.dat Epilepsy
 \begin{itemize}
     \item ``pid'' --- Patient ID
-    \item ``scount'' --- Seizure Count 
+    \item ``scount'' --- Seizure Count
     \item ``tmt'' --- Treatment
     \item ``base'' --- Base Effect
     \item ``age'' --- Age
-    \item ``visit'' 
+    \item ``visit''
 \end{itemize}
 
 $S$ is the number of seizures (scount)
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+epi <- \hlfunctioncall{read.table}(\hlstring{"data/11epi.dat"}, col.names = \hlfunctioncall{c}(\hlstring{"pid"}, \hlstring{"scount"}, \hlstring{"tmt"}, \hlstring{"base"}, 
+    \hlstring{"age"}, \hlstring{"visit"}))
+N <- \hlfunctioncall{nrow}(epi)
+pid <- epi$pid
+scount <- epi$scount
+tmt <- epi$tmt
+base <- epi$base
+age <- epi$age
+vist <- epi$visit
+epi$inic4 <- \hlfunctioncall{rep}(\hlfunctioncall{c}(0, 0, 0, 1), N/4)
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
 \begin{align*}
     S_{i} &\sim \poisd(\lambda)\\
-    \lambda = a_{0} + a_{\text{age}}*\text{age}+ a_{\text{tmt}}*\text{tmt}+ a_{\text{base}}*\text{base}
+    \lambda = a_{0} + a_{\text{age}}*\text{age}_{i} + a_{\text{tmt}}*\text{tmt}_{i} + a_{\text{base}}*\text{base}_{i}
 \end{align*}
+
+\renewcommand{\dateTaken}{March 26, 2013}
+\daysep
+Plotting data
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlfunctioncall{library}(nlme)
+g_epi <- \hlfunctioncall{groupedData}(scount ~ visit | pid, epi)
+\hlfunctioncall{plot}(g_epi)
+\hlfunctioncall{plot}()
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error: argument "x" is missing, with no default}}\end{kframe}
+
+{\centering \includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-54} 
+
+}
+
+
+
+\end{knitrout}
+
+
+Things learned from this plot:
+\begin{itemize}
+    \item There doesn't seem to be an effect due to time
+    \item Subjects matter, so we need a random
+\end{itemize}
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlfunctioncall{curve}(\hlfunctioncall{dgamma}(x, 1.1, 0.1), from = 0, to = 20)
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-55} 
+
+}
+
+
+
+\end{knitrout}
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+mdl <- \hlstring{"model \{\textbackslash{}\hlfunctioncall{nfor} (i in 1:N) \{\textbackslash{}nscount[i] ~ \hlfunctioncall{dpois}(lambda[i])\textbackslash{}nlambda[i] <- a_0 + a_age*age[i] + a_base*base[i] + a_tmt*tmt[i] + int_age_base*age[i]*base[i] + int_age_tmt*age[i]*tmt[i] + int_base_tmt*base[i]*tmt[i] + u_sub[pid[i]]\textbackslash{}n\}\textbackslash{}\hlfunctioncall{ninvisible}(\textbackslash{}"}.BeGiN_TiDy_IdEnTiFiEr_HaHaHa.HaHaHa_EnD_TiDy_IdEnTiFiEr\textbackslash{}\hlstring{")\textbackslash{}\hlfunctioncall{ninvisible}(\textbackslash{}"}.BeGiN_TiDy_IdEnTiFiEr_HaHaHa# priors.HaHaHa_EnD_TiDy_IdEnTiFiEr\textbackslash{}\hlstring{")\textbackslash{}na_0        ~ \hlfunctioncall{dgamma}(1.1, 0.1)\textbackslash{}na_age      ~ \hlfunctioncall{dgamma}(1.1, 0.1)\textbackslash{}na_base     ~ \hlfunctioncall{dgamma}(1.1, 0.1)\textbackslash{}na_tmt      ~ \hlfunctioncall{dgamma}(1.1, 0.1)\textbackslash{}nint_age_base ~ \hlfunctioncall{dgamma}(1.1, 0.1)\textbackslash{}nint_age_tmt  ~ \hlfunctioncall{dgamma}(1.1, 0.1)\textbackslash{}nint_base_tmt ~ \hlfunctioncall{dgamma}(1.1, 0.1)\textbackslash{}\hlfunctioncall{ninvisible}(\textbackslash{}"}.BeGiN_TiDy_IdEnTiFiEr_HaHaHa.HaHaHa_EnD_TiDy_IdEnTiFiEr\textbackslash{}\hlstring{")\textbackslash{}\hlfunctioncall{nfor} (i in 1:59) \{\textbackslash{}nu_sub[i] ~ \hlfunctioncall{dexp}(ll)\textbackslash{}n\}\textbackslash{}nll ~ \hlfunctioncall{dunif}(0,1)\textbackslash{}n\}\textbackslash{}n"}
+\hlfunctioncall{writeLines}(mdl, \hlstring{"code/EPI_Interaction.jags"})
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+jags.data <- \hlfunctioncall{c}(\hlstring{"N"}, \hlstring{"pid"}, \hlstring{"scount"}, \hlstring{"age"}, \hlstring{"tmt"}, \hlstring{"base"})
+jags.params <- \hlfunctioncall{c}(\hlstring{"a_0"}, \hlstring{"a_age"}, \hlstring{"a_base"}, \hlstring{"a_tmt"}, \hlstring{"int_age_base"}, \hlstring{"int_age_tmt"}, 
+    \hlstring{"int_base_tmt"}, \hlstring{"ll"})
+\hlfunctioncall{set.seed}(3245)
+epi.jags <- \hlfunctioncall{jags}(data = jags.data, parameters.to.save = jags.params, model.file = \hlstring{"code/EPI_Interaction.jags"}, 
+    n.iter = 12000, n.burnin = 2000, n.chains = 1, n.thin = 1)
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error: \\\#\# Error parsing model file:\\\#\# syntax error on line 6 near """}}\begin{alltt}
+epi.jags
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error: object 'epi.jags' not found}}\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+epi.sim <- \hlfunctioncall{as.mcmc}(epi.jags)
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error: object 'epi.jags' not found}}\begin{alltt}
+\hlfunctioncall{plot}(epi.sim, auto.layout = inter, ask = inter)
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error: object 'epi.sim' not found}}\begin{alltt}
+\hlfunctioncall{autocorr.plot}(epi.sim, auto.layout = inter, ask = inter)
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error: object 'inter' not found}}\begin{alltt}
+\hlfunctioncall{raftery.diag}(epi.sim)
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error: object 'epi.sim' not found}}\end{kframe}
+\end{knitrout}
+
+Posterior Predictive Plots
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlfunctioncall{hist}(epi$scount)
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-56} 
+
+}
+
+
+
+\end{knitrout}
+
+We can't do general poserior predicitves so let's look at particular values
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlfunctioncall{hist}(epi$scount[epi$tmt == 1 & epi$age >= 19 & epi$age <= 23 & 30 <= epi$base & epi$base <= 
+    60])
+\hlfunctioncall{plot}(\hlfunctioncall{density}(epi$age))
+\hlfunctioncall{curve}(\hlfunctioncall{dnorm}(x, 30, 8), add = TRUE, col = \hlstring{"red"})
+\hlfunctioncall{plot}(\hlfunctioncall{density}(epi$base))
+\hlfunctioncall{curve}(\hlfunctioncall{dgamma}(1.1, scale = 30), add = T, color = \hlstring{"red"})
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error: 'expr' must be a function, or a call or an expression containing 'x'}}\begin{alltt}
+people <- \hlfunctioncall{cbind}(age = \hlfunctioncall{rnorm}(iter, 30, 8), )
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error: object 'iter' not found}}\begin{alltt}
+
+iter <- 10^4
+pp <- \hlfunctioncall{numeric}(iter)
+\hlfunctioncall{for} (i in 1:iter) \{
+    rage <- \hlfunctioncall{rnorm}(1, 30, 8)
+    rbase <- \hlfunctioncall{rgamma}(1, 1.1, scale = 30)
+    rtmt <- \hlfunctioncall{rbinom}(1, 1, 0.5)
+    x1 <- epi.sim[i, 1] + epi.sim[i, 2] * rage + epi.sim[, 3] * rbase + epi.sim[, 
+        4] * rtmt + epi.sim[i, 6] * rage * rbase + epi.sim[i, 7] * rage * rtmt + 
+        epi.sim[i, 8] * rbase * rtmt + \hlfunctioncall{rexp}(1, epi.sim[i, 9])
+    pp[i] <- \hlfunctioncall{rpois}(1, x1)
+\}
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error: object 'epi.sim' not found}}\begin{alltt}
+\hlfunctioncall{hist}(epi$scount, breaks = 20, freq = F, col = \hlstring{"red"})
+\hlfunctioncall{hist}(pp, breaks = 20, freq = F, add = T)
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-571} 
+\includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-572} 
+\includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-573} 
+\includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-574} 
+
+}
+
+
+
+\end{knitrout}
+
 % section poisson_likelihood (end)
 \end{document}

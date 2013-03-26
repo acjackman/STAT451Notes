@@ -1644,7 +1644,7 @@ logit.jags <- jags(data=jags.data,
                   n.chains=1, n.thin=1)
 logit.sim <- as.mcmc(logit.jags)
 @
-factorial design 
+factorial design
 
 Cat-N
 \begin{tabular}{cccc}
@@ -1812,7 +1812,7 @@ mdl <- ' model {
         CHD[i] ~ dbin(p[i], nRisk[i]);
             logit(p[i]) <- bint + bcat*cat[i] + bage*age[i] + becg*ecg[i];
     }
-    
+
     bint ~ dnorm(0, .1);
     bcat ~ dnorm(0, .1);
     bage ~ dnorm(0, .1);
@@ -1822,7 +1822,7 @@ mdl <- ' model {
 writeLines(mdl,'code/LogitReducedModel.jags')
 @
 <<LogitReducedSim, dependson=c('LogitReducedModel','CHDData')>>=
-CHD <- chd[,1] 
+CHD <- chd[,1]
 nRisk <- chd[,2]
 tmt <- chd[,6]
 cat <- chd[,3]
@@ -1911,29 +1911,121 @@ seedsimple.jags
 % subsection random_effects (end)
 \renewcommand{\dateTaken}{March 21, 2013}
 \daysep
-\lstinsertlisting[language=SAS]{2013-03-21_SAS.sas}
+\lstinputlisting[language=SAS]{code/2013-03-21_SAS.sas}
 % section logistic_regression (end)
 \section{Poisson Likelihood} % (fold)
 \label{sec:poisson_likelihood}
-11epi.dat Epilepsy 
+11epi.dat Epilepsy
 \begin{itemize}
     \item ``pid'' --- Patient ID
-    \item ``scount'' --- Seizure Count 
+    \item ``scount'' --- Seizure Count
     \item ``tmt'' --- Treatment
     \item ``base'' --- Base Effect
     \item ``age'' --- Age
-    \item ``visit'' 
+    \item ``visit''
 \end{itemize}
 
 $S$ is the number of seizures (scount)
+<<EPIData>>=
+epi <- read.table('data/11epi.dat', col.names=c("pid", "scount", "tmt", "base", "age", "visit"))
+N <- nrow(epi)
+pid <- epi$pid
+scount <- epi$scount
+tmt <- epi$tmt
+base <- epi$base
+age <- epi$age
+vist <- epi$visit
+epi$inic4 <- rep(c(0,0,0,1), N/4)
+@
 \begin{align*}
     S_{i} &\sim \poisd(\lambda)\\
     \lambda = a_{0} + a_{\text{age}}*\text{age}_{i} + a_{\text{tmt}}*\text{tmt}_{i} + a_{\text{base}}*\text{base}_{i}
 \end{align*}
 
+\renewcommand{\dateTaken}{March 26, 2013}
+\daysep
+Plotting data
 <<>>=
-epi <- read.table('11epi.dat', col.names=c("pid", "scount", "tmt", "base", "age", "visit"))
+library(nlme)
+g_epi <- groupedData(scount ~ visit | pid, epi)
+plot(g_epi)
+plot()
+@
 
+Things learned from this plot:
+\begin{itemize}
+    \item There doesn't seem to be an effect due to time
+    \item Subjects matter, so we need a random
+\end{itemize}
+
+<<>>=
+curve(dgamma(x,1.1,0.1), from=0, to=20)
+@
+<<EPIModel>>=
+mdl <- 'model {
+    for (i in 1:N) {
+        scount[i] ~ dpois(lambda[i])
+        lambda[i] <- a_0 + a_age*age[i] + a_base*base[i] + a_tmt*tmt[i] + int_age_base*age[i]*base[i] + int_age_tmt*age[i]*tmt[i] + int_base_tmt*base[i]*tmt[i] + u_sub[pid[i]]
+    }
+
+    # priors
+    a_0        ~ dgamma(1.1, 0.1)
+    a_age      ~ dgamma(1.1, 0.1)
+    a_base     ~ dgamma(1.1, 0.1)
+    a_tmt      ~ dgamma(1.1, 0.1)
+    int_age_base ~ dgamma(1.1, 0.1)
+    int_age_tmt  ~ dgamma(1.1, 0.1)
+    int_base_tmt ~ dgamma(1.1, 0.1)
+
+    for (i in 1:59) {
+        u_sub[i] ~ dexp(ll)
+    }
+    ll ~ dunif(0,1)
+}
+'
+writeLines(mdl, 'code/EPI_Interaction.jags')
+@
+<<EPISim,dependson=c('EPIData','EPIModel')>>=
+jags.data <- c('N', 'pid', 'scount', 'age', 'tmt', 'base')
+jags.params <- c('a_0', 'a_age', 'a_base', 'a_tmt', 'int_age_base', 'int_age_tmt', 'int_base_tmt', 'll')
+set.seed(3245)
+epi.jags <- jags(data=jags.data,
+                  parameters.to.save=jags.params,
+                  model.file='code/EPI_Interaction.jags',
+                  n.iter=12000, n.burnin=2000,
+                  n.chains=1, n.thin=1)
+epi.jags
+@
+<<EPIDiagnostics>>=
+epi.sim <- as.mcmc(epi.jags)
+plot(epi.sim, auto.layout=inter, ask=inter)
+autocorr.plot(epi.sim, auto.layout=inter, ask=inter)
+raftery.diag(epi.sim)
+@
+Posterior Predictive Plots
+<<>>=
+hist(epi$scount)
+@
+We can't do general poserior predicitves so let's look at particular values
+<<>>=
+hist(epi$scount[epi$tmt==1 & epi$age>=19 & epi$age<=23 & 30<=epi$base & epi$base<=60 ])
+plot(density(epi$age))
+curve(dnorm(x,30,8),add=TRUE, col='red')
+plot(density(epi$base))
+curve(dgamma(1.1, scale=30), add=T, color='red')
+people <- cbind(age=rnorm(iter,30,8), )
+
+iter<- 10^4
+pp <- numeric(iter)
+for(i in 1:iter){
+    rage <- rnorm(1,30,8)
+    rbase <- rgamma(1,1.1, scale=30)
+    rtmt <- rbinom(1,1,.5)
+    x1 <- epi.sim[i,1] + epi.sim[i,2]*rage + epi.sim[,3]*rbase + epi.sim[,4]*rtmt + epi.sim[i,6]*rage*rbase + epi.sim[i,7]*rage*rtmt + epi.sim[i,8]*rbase*rtmt + rexp(1,epi.sim[i,9])
+    pp[i] <- rpois(1,x1)
+}
+hist(epi$scount, breaks=20, freq=F, col='red')
+hist(pp,breaks=20, freq=F, add=T)
 @
 % section poisson_likelihood (end)
 \end{document}

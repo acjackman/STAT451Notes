@@ -1,0 +1,21 @@
+model {
+for (i in 1:N) {
+scount[i] ~ dpois(lambda[i])
+lambda[i] <- a_0 + a_age*age[i] + a_base*base[i] + a_tmt*tmt[i] + int_age_base*age[i]*base[i] + int_age_tmt*age[i]*tmt[i] + int_base_tmt*base[i]*tmt[i] + u_sub[pid[i]]
+}
+invisible(".BeGiN_TiDy_IdEnTiFiEr_HaHaHa.HaHaHa_EnD_TiDy_IdEnTiFiEr")
+invisible(".BeGiN_TiDy_IdEnTiFiEr_HaHaHa# priors.HaHaHa_EnD_TiDy_IdEnTiFiEr")
+a_0        ~ dgamma(1.1, 0.1)
+a_age      ~ dgamma(1.1, 0.1)
+a_base     ~ dgamma(1.1, 0.1)
+a_tmt      ~ dgamma(1.1, 0.1)
+int_age_base ~ dgamma(1.1, 0.1)
+int_age_tmt  ~ dgamma(1.1, 0.1)
+int_base_tmt ~ dgamma(1.1, 0.1)
+invisible(".BeGiN_TiDy_IdEnTiFiEr_HaHaHa.HaHaHa_EnD_TiDy_IdEnTiFiEr")
+for (i in 1:59) {
+u_sub[i] ~ dexp(ll)
+}
+ll ~ dunif(0,1)
+}
+
