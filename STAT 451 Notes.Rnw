@@ -1930,12 +1930,14 @@ $S$ is the number of seizures (scount)
 epi <- read.table('data/11epi.dat', col.names=c("pid", "scount", "tmt", "base", "age", "visit"))
 N <- nrow(epi)
 pid <- epi$pid
+N_pid <- length(unique(pid))
 scount <- epi$scount
 tmt <- epi$tmt
 base <- epi$base
 age <- epi$age
-vist <- epi$visit
-epi$inic4 <- rep(c(0,0,0,1), N/4)
+visit <- epi$visit
+epi$indic4 <- ifelse(visit==4, 1, 0)
+indic4 <- epi$indic4
 @
 \begin{align*}
     S_{i} &\sim \poisd(\lambda)\\
@@ -2027,5 +2029,55 @@ for(i in 1:iter){
 hist(epi$scount, breaks=20, freq=F, col='red')
 hist(pp,breaks=20, freq=F, add=T)
 @
+\subsection{Log Poisson} % (fold)
+\label{sub:log_poisson}
+\renewcommand{\dateTaken}{March 28, 2013}
+\daysep
+\begin{lstlisting}
+count[i] <- dpois[lambda[i]]
+log(lambda[i]) <- a0 + a_age*log(age[i]) + a_base*log(base[i]/4) + a_tmt*tmt[i] +
+                  a_base_tmt*log(base[i]/4)+tmt[i] + a_4*indic4[i] +
+                  u[pid[i]] + aobs[i]
+aobs[i] ~ dnorm(0,1/s2obs)
+\end{lstlisting}
+<<EPIPaperModel, dependson=c('EPIDATA')>>=
+lbase4 <- log(base/4)
+lage <- log(age)
+mdl <-'model {
+    for (i in 1:N) {
+        scount[i] ~ dpois(lambda[i])
+        log(lambda[i]) <- a_0 + a_age*lage[i] + a_base*lbase4[i] + a_tmt*tmt[i] +
+                          a_base_tmt*lbase4[i]*tmt[i] + a_4*indic4[i] +
+                          u_sub[pid[i]] + u_obs[i]
+        u_obs[i] ~ dnorm(0, 1/s2obs)
+    }
+    for (i in 1:N_pid) {
+        u_sub[i] ~ dnorm(0, 1/s2sub)
+    }
+
+    a_0        ~ dnorm(0, 0.0001)
+    a_base     ~ dnorm(0, 0.0001)
+    a_tmt      ~ dnorm(0, 0.0001)
+    a_base_tmt ~ dnorm(0, 0.0001)
+    a_age      ~ dnorm(0, 0.0001)
+    a_4        ~ dnorm(0, 0.0001)
+    s2obs      ~ dgamma(1.1, 1)
+    s2sub      ~ dgamma(1.1, 1)
+}
+'
+writeLines(mdl, 'code/EPIPaper.jags')
+@
+<<EPIPaperSim>>=
+jags.data <- c('N', 'N_pid', 'pid', 'scount', 'lage', 'tmt', 'lbase4', 'indic4')
+jags.params <- c('a_0', 'a_age', 'a_base', 'a_tmt', 'a_base_tmt', 'a_4', 's2obs', 's2sub')
+set.seed(3245)
+epiP.jags <- jags(data=jags.data,
+                  parameters.to.save=jags.params,
+                  model.file='code/EPIPaper.jags',
+                  n.iter=12000, n.burnin=2000,
+                  n.chains=1, n.thin=1)
+@
+If you have correlated $X$'s then you shift the $X$
+% subsection log_poisson (end)
 % section poisson_likelihood (end)
 \end{document}

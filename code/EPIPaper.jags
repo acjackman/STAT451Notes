@@ -1,0 +1,21 @@
+model {
+    for (i in 1:N) {
+        scount[i] ~ dpois(lambda[i])
+        log(lambda[i]) <- a_0 + a_age*lage[i] + a_base*lbase4[i] + a_tmt*tmt[i] +
+                          a_base_tmt*lbase4[i]*tmt[i] + a_4*indic4[i] +
+                          u_sub[pid[i]] + u_obs[i]
+        u_obs[i] ~ dnorm(0, 1/s2obs)
+    }
+    for (i in 1:N_pid) {
+        u_sub[i] ~ dnorm(0, 1/s2sub)
+    }
+    a_0        ~ dnorm(0, 0.0001)
+    a_base     ~ dnorm(0, 0.0001)
+    a_tmt      ~ dnorm(0, 0.0001)
+    a_base_tmt ~ dnorm(0, 0.0001)
+    a_age      ~ dnorm(0, 0.0001)
+    a_4        ~ dnorm(0, 0.0001)
+    s2obs      ~ dgamma(1.1, 1)
+    s2sub      ~ dgamma(1.1, 1)
+}
+
