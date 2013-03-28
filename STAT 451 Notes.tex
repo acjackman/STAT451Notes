@@ -3219,12 +3219,14 @@ epi <- \hlfunctioncall{read.table}(\hlstring{"data/11epi.dat"}, col.names = \hlf
     \hlstring{"age"}, \hlstring{"visit"}))
 N <- \hlfunctioncall{nrow}(epi)
 pid <- epi$pid
+N_pid <- \hlfunctioncall{length}(\hlfunctioncall{unique}(pid))
 scount <- epi$scount
 tmt <- epi$tmt
 base <- epi$base
 age <- epi$age
-vist <- epi$visit
-epi$inic4 <- \hlfunctioncall{rep}(\hlfunctioncall{c}(0, 0, 0, 1), N/4)
+visit <- epi$visit
+epi$indic4 <- \hlfunctioncall{ifelse}(visit == 4, 1, 0)
+indic4 <- epi$indic4
 \end{alltt}
 \end{kframe}
 \end{knitrout}
@@ -3299,6 +3301,8 @@ epi.jags <- \hlfunctioncall{jags}(data = jags.data, parameters.to.save = jags.pa
     n.iter = 12000, n.burnin = 2000, n.chains = 1, n.thin = 1)
 \end{alltt}
 
+
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# module glm loaded}}
 
 {\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error: \\\#\# Error parsing model file:\\\#\# syntax error on line 6 near """}}\begin{alltt}
 epi.jags
@@ -3406,8 +3410,68 @@ pp <- \hlfunctioncall{numeric}(iter)
 \daysep
 \begin{lstlisting}
 count[i] <- dpois[lambda[i]]
-log(lambda[i]) <-
+log(lambda[i]) <- a0 + a_age*log(age[i]) + a_base*log(base[i]/4) + a_tmt*tmt[i] +
+                  a_base_tmt*log(base[i]/4)+tmt[i] + a_4*indic4[i] +
+                  u[pid[i]] + aobs[i]
+aobs[i] ~ dnorm(0,1/s2obs)
 \end{lstlisting}
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+lbase4 <- \hlfunctioncall{log}(base/4)
+lage <- \hlfunctioncall{log}(age)
+mdl <-'model \{
+    \hlfunctioncall{for} (i in 1:N) \{
+        scount[i] ~ \hlfunctioncall{dpois}(lambda[i])
+        \hlfunctioncall{log}(lambda[i]) <- a_0 + a_age*lage[i] + a_base*lbase4[i] + a_tmt*tmt[i] +
+                          a_base_tmt*lbase4[i]*tmt[i] + a_4*indic4[i] +
+                          u_sub[pid[i]] + u_obs[i]
+        u_obs[i] ~ \hlfunctioncall{dnorm}(0, 1/s2obs)
+    \}
+    \hlfunctioncall{for} (i in 1:N_pid) \{
+        u_sub[i] ~ \hlfunctioncall{dnorm}(0, 1/s2sub)
+    \}
+
+    a_0        ~ \hlfunctioncall{dnorm}(0, 0.0001)
+    a_base     ~ \hlfunctioncall{dnorm}(0, 0.0001)
+    a_tmt      ~ \hlfunctioncall{dnorm}(0, 0.0001)
+    a_base_tmt ~ \hlfunctioncall{dnorm}(0, 0.0001)
+    a_age      ~ \hlfunctioncall{dnorm}(0, 0.0001)
+    a_4        ~ \hlfunctioncall{dnorm}(0, 0.0001)
+    s2obs      ~ \hlfunctioncall{dgamma}(1.1, 1)
+    s2sub      ~ \hlfunctioncall{dgamma}(1.1, 1)
+\}
+'
+\hlfunctioncall{writeLines}(mdl, \hlstring{'code/EPIPaper.jags'})
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+jags.data <- \hlfunctioncall{c}(\hlstring{"N"}, \hlstring{"N_pid"}, \hlstring{"pid"}, \hlstring{"scount"}, \hlstring{"lage"}, \hlstring{"tmt"}, \hlstring{"lbase4"}, \hlstring{"indic4"})
+jags.params <- \hlfunctioncall{c}(\hlstring{"a_0"}, \hlstring{"a_age"}, \hlstring{"a_base"}, \hlstring{"a_tmt"}, \hlstring{"a_base_tmt"}, \hlstring{"a_4"}, \hlstring{"s2obs"}, 
+    \hlstring{"s2sub"})
+a <- \hlstring{"test"}
+\hlfunctioncall{set.seed}(3245)
+epiP.jags <- \hlfunctioncall{jags}(data = jags.data, parameters.to.save = jags.params, model.file = \hlstring{"code/EPIPaper.jags"}, 
+    n.iter = 12000, n.burnin = 2000, n.chains = 1, n.thin = 1)
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# module glm loaded}}\begin{verbatim}
+## Compiling model graph
+##    Resolving undeclared variables
+##    Allocating nodes
+##    Graph Size: 2306
+## 
+## Initializing model
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+If you have correlated $X$'s then you shift the $X$
 % subsection log_poisson (end)
 % section poisson_likelihood (end)
 \end{document}

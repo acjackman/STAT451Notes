@@ -2040,7 +2040,7 @@ log(lambda[i]) <- a0 + a_age*log(age[i]) + a_base*log(base[i]/4) + a_tmt*tmt[i] 
                   u[pid[i]] + aobs[i]
 aobs[i] ~ dnorm(0,1/s2obs)
 \end{lstlisting}
-<<EPIPaperModel, dependson=c('EPIDATA')>>=
+<<EPIPaperModel, tidy=FALSE, dependson=c('EPIDATA')>>=
 lbase4 <- log(base/4)
 lage <- log(age)
 mdl <-'model {
@@ -2067,9 +2067,10 @@ mdl <-'model {
 '
 writeLines(mdl, 'code/EPIPaper.jags')
 @
-<<EPIPaperSim>>=
+<<EPIPaperSim, dependson=c('EPIPaperModel')>>=
 jags.data <- c('N', 'N_pid', 'pid', 'scount', 'lage', 'tmt', 'lbase4', 'indic4')
 jags.params <- c('a_0', 'a_age', 'a_base', 'a_tmt', 'a_base_tmt', 'a_4', 's2obs', 's2sub')
+a <- 'test'
 set.seed(3245)
 epiP.jags <- jags(data=jags.data,
                   parameters.to.save=jags.params,
