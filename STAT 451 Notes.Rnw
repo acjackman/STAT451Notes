@@ -2070,7 +2070,7 @@ writeLines(mdl, 'code/EPIPaper.jags')
 <<EPIPaperSim, dependson=c('EPIPaperModel')>>=
 jags.data <- c('N', 'N_pid', 'pid', 'scount', 'lage', 'tmt', 'lbase4', 'indic4')
 jags.params <- c('a_0', 'a_age', 'a_base', 'a_tmt', 'a_base_tmt', 'a_4', 's2obs', 's2sub')
-a <- 'test'
+
 set.seed(3245)
 epiP.jags <- jags(data=jags.data,
                   parameters.to.save=jags.params,
@@ -2080,5 +2080,115 @@ epiP.jags <- jags(data=jags.data,
 @
 If you have correlated $X$'s then you shift the $X$
 % subsection log_poisson (end)
+\renewcommand{\dateTaken}{April  2, 2013}
+\daysep
+\subsection{Complex Model Posterior Predictive} % (fold)
+\label{sub:complex_model_posterior_predictive}
+
+<<>>=
+epiP.sim <- as.mcmc(epiP.jags)
+mCol <- function(name, data=epiP.sim) {
+    col <- which(attr(data, 'dimnames')[[2]]==name)
+    data[, col]
+}
+a_0 <- mCol('a_0')
+a_age <- mCol('a_age')
+a_base <- mCol('a_base')
+a_tmt <- mCol('a_tmt')
+a_base_tmt <- mCol('a_base_tmt')
+a_4 <- mCol('a_4')
+s2sub <- mCol('s2sub')
+s2obs <- mCol('s2obs')
+@
+
+We might be able to sample better from age with a gamma
+\begin{align*}
+    \mu &= \alpha \beta\\
+    v &= \alpha \beta^{2}\\
+    \beta&=\frac{v}{\mu}= .31\\
+\end{align*}
+<<>>=
+b <- var(lbase4)/mean(lbase4)
+a <- mean(lbase4)/b
+plot(density(lbase4))
+curve(dnorm(x, mean(lbase4), sd(lbase4)), add=TRUE, col='green', lwd=2)
+curve(dgamma(x, a, scale=b), add=TRUE, col='blue', lwd=2)
+@
+
+<<>>=
+plot(density(lage))
+curve(dnorm(x, mean(lage), sd(lage)), add=TRUE, col='blue')
+@
+<<>>=
+lmu <- numeric(10000)
+mean_lage <- mean(lage)
+sd_lage <- sd(lage)
+for (i in 1:10000) {
+    lb <- rgamma(1, a, scale=b)
+    tt <- rbinom(1, 1, 0.5)
+    la <- rnorm(1, mean_lage, sd_lage)
+    i4 <-rnorm(1, 1, 0.25)
+    lmu <- a_0[i] + a_age[i]*la + a_base[i]*lb + a_tmt[i]*tt +
+           a_base_tmt[i]*lb*tt + a_4[i]*i4 +
+           rnorm(1,0,sqrt(s2sub[i])) + rnorm(1,0,sqrt(s2obs[i]))
+}
+pp <- rpois(10000, exp(lmu))
+hist(scount, freq=FALSE)
+lines(density(pp), col='blue', lwd=2)
+@
+% subsection complex_model_posterior_predictive (end)
 % section poisson_likelihood (end)
+\subsection{Non Diagonal Covariance} % (fold)
+\label{sub:non_diagonal_covariance}
+\begin{align*}
+    y &= x \beta + Z u + e\\
+    e &\sim \normd(0,R)\\
+    u &\sim \normd(0,G)\\
+    V(y) &= ZGZ + R
+\end{align*}
+
+Compound Symmetric Structure
+\begin{align*}
+    \begin{bmatrix}
+        \sigma^{2}_{e} + \sigma^{2}_{u} & \sigma^{2}_{u} & \sigma^{2}_{u} & \sigma^{2}_{u}\\
+        \sigma^{2}_{u} & \sigma^{2}_{e} + \sigma^{2}_{u} & \sigma^{2}_{u} & \sigma^{2}_{u}\\
+        \sigma^{2}_{u} & \sigma^{2}_{u} & \sigma^{2}_{e} + \sigma^{2}_{u} & \sigma^{2}_{u}\\
+        \sigma^{2}_{u} & \sigma^{2}_{u} & \sigma^{2}_{u} & \sigma^{2}_{e} + \sigma^{2}_{u}\\
+    \end{bmatrix}
+\end{align*}
+
+\begin{align*}
+    \rho = \frac{\cov(1,2)}{\sqrt{\var(1)\var(2)}}=\frac{\sigma^{2}_{u}}{\sqrt{\sigma^{2}_{e} \sigma^{2}_{u}}}
+\end{align*}
+
+Three Groups in the experiment
+\begin{itemize}
+    \item Control
+    \item Reps
+    \item Weight
+\end{itemize}
+
+ind1 = (50,50, 40, 60, 55, 60, 45)
+
+Auto Regressive (AR(1))
+\begin{align*}
+V(Sub)=\begin{pmatrix}
+    1        & \rho     & \rho^{2} & \rho^{3} & \rho^{4} & \rho^{5} & \rho^{6}\\
+    \rho     & 1        & \rho     & \rho^{2} & \rho^{3} & \rho^{4} & \rho^{5}\\
+    \rho^{2} & \rho     & 1        & \rho     & \rho^{2} & \rho^{3} & \rho^{4}\\
+    \rho^{3} & \rho^{2} & \rho     & 1        & \rho     & \rho^{2} & \rho^{3}\\
+    \rho^{4} & \rho^{3} & \rho^{2} & \rho     & 1        & \rho     & \rho^{2}\\
+    \rho^{5} & \rho^{4} & \rho^{3} & \rho^{2} & \rho     & 1        & \rho    \\
+    \rho^{6} & \rho^{5} & \rho^{4} & \rho^{3} & \rho^{2} & \rho     & 1       \\
+\end{pmatrix}
+\end{align*}
+
+<<WeightData>>=
+weight <- read.table("data/weight.dat", header = TRUE)
+weight$tz <- weight$time -1
+weight$st <- paste0(weight$tmt, '/',weight$subject)
+weight$subj <- c(rep(1:20, times=7), rep(21:36, times=7), rep(37:57, times=7))
+weight$subj <- as.numeric(as.factor(paste(weight$tmt,sprintf("%02s", weight$subject))))
+@
+% subsection non_diagonal_covariance (end)
 \end{document}

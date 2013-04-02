@@ -3453,7 +3453,7 @@ mdl <-'model \{
 jags.data <- \hlfunctioncall{c}(\hlstring{"N"}, \hlstring{"N_pid"}, \hlstring{"pid"}, \hlstring{"scount"}, \hlstring{"lage"}, \hlstring{"tmt"}, \hlstring{"lbase4"}, \hlstring{"indic4"})
 jags.params <- \hlfunctioncall{c}(\hlstring{"a_0"}, \hlstring{"a_age"}, \hlstring{"a_base"}, \hlstring{"a_tmt"}, \hlstring{"a_base_tmt"}, \hlstring{"a_4"}, \hlstring{"s2obs"}, 
     \hlstring{"s2sub"})
-a <- \hlstring{"test"}
+
 \hlfunctioncall{set.seed}(3245)
 epiP.jags <- \hlfunctioncall{jags}(data = jags.data, parameters.to.save = jags.params, model.file = \hlstring{"code/EPIPaper.jags"}, 
     n.iter = 12000, n.burnin = 2000, n.chains = 1, n.thin = 1)
@@ -3473,5 +3473,160 @@ epiP.jags <- \hlfunctioncall{jags}(data = jags.data, parameters.to.save = jags.p
 
 If you have correlated $X$'s then you shift the $X$
 % subsection log_poisson (end)
+\renewcommand{\dateTaken}{April  2, 2013}
+\daysep
+\subsection{Complex Model Posterior Predictive} % (fold)
+\label{sub:complex_model_posterior_predictive}
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+epiP.sim <- \hlfunctioncall{as.mcmc}(epiP.jags)
+mCol <- \hlfunctioncall{function}(name, data = epiP.sim) \{
+    col <- \hlfunctioncall{which}(\hlfunctioncall{attr}(data, \hlstring{"dimnames"})[[2]] == name)
+    data[, col]
+\}
+a_0 <- \hlfunctioncall{mCol}(\hlstring{"a_0"})
+a_age <- \hlfunctioncall{mCol}(\hlstring{"a_age"})
+a_base <- \hlfunctioncall{mCol}(\hlstring{"a_base"})
+a_tmt <- \hlfunctioncall{mCol}(\hlstring{"a_tmt"})
+a_base_tmt <- \hlfunctioncall{mCol}(\hlstring{"a_base_tmt"})
+a_4 <- \hlfunctioncall{mCol}(\hlstring{"a_4"})
+s2sub <- \hlfunctioncall{mCol}(\hlstring{"s2sub"})
+s2obs <- \hlfunctioncall{mCol}(\hlstring{"s2obs"})
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+
+We might be able to sample better from age with a gamma
+\begin{align*}
+    \mu &= \alpha \beta\\
+    v &= \alpha \beta^{2}\\
+    \beta&=\frac{v}{\mu}= .31\\
+\end{align*}
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+b <- \hlfunctioncall{var}(lbase4)/\hlfunctioncall{mean}(lbase4)
+a <- \hlfunctioncall{mean}(lbase4)/b
+\hlfunctioncall{plot}(\hlfunctioncall{density}(lbase4))
+\hlfunctioncall{curve}(\hlfunctioncall{dnorm}(x, \hlfunctioncall{mean}(lbase4), \hlfunctioncall{sd}(lbase4)), add = TRUE, col = \hlstring{"green"}, lwd = 2)
+\hlfunctioncall{curve}(\hlfunctioncall{dgamma}(x, a, scale = b), add = TRUE, col = \hlstring{"blue"}, lwd = 2)
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-59} 
+
+}
+
+
+
+\end{knitrout}
+
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlfunctioncall{plot}(\hlfunctioncall{density}(lage))
+\hlfunctioncall{curve}(\hlfunctioncall{dnorm}(x, \hlfunctioncall{mean}(lage), \hlfunctioncall{sd}(lage)), add = TRUE, col = \hlstring{"blue"})
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-60} 
+
+}
+
+
+
+\end{knitrout}
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+lmu <- \hlfunctioncall{numeric}(10000)
+mean_lage <- \hlfunctioncall{mean}(lage)
+sd_lage <- \hlfunctioncall{sd}(lage)
+\hlfunctioncall{for} (i in 1:10000) \{
+    lb <- \hlfunctioncall{rgamma}(1, a, scale = b)
+    tt <- \hlfunctioncall{rbinom}(1, 1, 0.5)
+    la <- \hlfunctioncall{rnorm}(1, mean_lage, sd_lage)
+    i4 <- \hlfunctioncall{rnorm}(1, 1, 0.25)
+    lmu <- a_0[i] + a_age[i] * la + a_base[i] * lb + a_tmt[i] * tt + a_base_tmt[i] * 
+        lb * tt + a_4[i] * i4 + \hlfunctioncall{rnorm}(1, 0, \hlfunctioncall{sqrt}(s2sub[i])) + \hlfunctioncall{rnorm}(1, 0, \hlfunctioncall{sqrt}(s2obs[i]))
+\}
+pp <- \hlfunctioncall{rpois}(10000, \hlfunctioncall{exp}(lmu))
+\hlfunctioncall{hist}(scount, freq = FALSE)
+\hlfunctioncall{lines}(\hlfunctioncall{density}(pp), col = \hlstring{"blue"}, lwd = 2)
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.4\textwidth]{figure/graphic-unnamed-chunk-61} 
+
+}
+
+
+
+\end{knitrout}
+
+% subsection complex_model_posterior_predictive (end)
 % section poisson_likelihood (end)
+\subsection{Non Diagonal Covariance} % (fold)
+\label{sub:non_diagonal_covariance}
+\begin{align*}
+    y &= x \beta + Z u + e\\
+    e &\sim \normd(0,R)\\
+    u &\sim \normd(0,G)\\
+    V(y) &= ZGZ + R
+\end{align*}
+
+Compound Symmetric Structure
+\begin{align*}
+    \begin{bmatrix}
+        \sigma^{2}_{e} + \sigma^{2}_{u} & \sigma^{2}_{u} & \sigma^{2}_{u} & \sigma^{2}_{u}\\
+        \sigma^{2}_{u} & \sigma^{2}_{e} + \sigma^{2}_{u} & \sigma^{2}_{u} & \sigma^{2}_{u}\\
+        \sigma^{2}_{u} & \sigma^{2}_{u} & \sigma^{2}_{e} + \sigma^{2}_{u} & \sigma^{2}_{u}\\
+        \sigma^{2}_{u} & \sigma^{2}_{u} & \sigma^{2}_{u} & \sigma^{2}_{e} + \sigma^{2}_{u}\\
+    \end{bmatrix}
+\end{align*}
+
+\begin{align*}
+    \rho = \frac{\cov(1,2)}{\sqrt{\var(1)\var(2)}}=\frac{\sigma^{2}_{u}}{\sqrt{\sigma^{2}_{e} \sigma^{2}_{u}}}
+\end{align*}
+
+Three Groups in the experiment
+\begin{itemize}
+    \item Control
+    \item Reps
+    \item Weight
+\end{itemize}
+
+ind1 = (50,50, 40, 60, 55, 60, 45)
+
+Auto Regressive (AR(1))
+\begin{align*}
+V(Sub)=\begin{pmatrix}
+    1        & \rho     & \rho^{2} & \rho^{3} & \rho^{4} & \rho^{5} & \rho^{6}\\
+    \rho     & 1        & \rho     & \rho^{2} & \rho^{3} & \rho^{4} & \rho^{5}\\
+    \rho^{2} & \rho     & 1        & \rho     & \rho^{2} & \rho^{3} & \rho^{4}\\
+    \rho^{3} & \rho^{2} & \rho     & 1        & \rho     & \rho^{2} & \rho^{3}\\
+    \rho^{4} & \rho^{3} & \rho^{2} & \rho     & 1        & \rho     & \rho^{2}\\
+    \rho^{5} & \rho^{4} & \rho^{3} & \rho^{2} & \rho     & 1        & \rho    \\
+    \rho^{6} & \rho^{5} & \rho^{4} & \rho^{3} & \rho^{2} & \rho     & 1       \\
+\end{pmatrix}
+\end{align*}
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+weight <- \hlfunctioncall{read.table}(\hlstring{"data/weight.dat"}, header = TRUE)
+weight$tz <- weight$time - 1
+weight$st <- \hlfunctioncall{paste0}(weight$tmt, \hlstring{"/"}, weight$subject)
+weight$subj <- \hlfunctioncall{c}(\hlfunctioncall{rep}(1:20, times = 7), \hlfunctioncall{rep}(21:36, times = 7), \hlfunctioncall{rep}(37:57, times = 7))
+weight$subj <- \hlfunctioncall{as.numeric}(\hlfunctioncall{as.factor}(\hlfunctioncall{paste}(weight$tmt, \hlfunctioncall{sprintf}(\hlstring{"%02s"}, weight$subject))))
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+% subsection non_diagonal_covariance (end)
 \end{document}

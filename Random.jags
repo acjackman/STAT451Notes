@@ -1,0 +1,9 @@
+model {
+    for(i in 1:11){
+        deaths[i] ~ dbin(p[i], ops[i])
+        logit(p[i]) <- b[hospital[i]]
+        b[hospital[i]] ~ dnorm(0,1/s2[i])
+        s2[i] ~ dgamma(1.6, 1.1)
+    }
+}
+
