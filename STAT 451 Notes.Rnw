@@ -2191,4 +2191,16 @@ weight$subj <- c(rep(1:20, times=7), rep(21:36, times=7), rep(37:57, times=7))
 weight$subj <- as.numeric(as.factor(paste(weight$tmt,sprintf("%02s", weight$subject))))
 @
 % subsection non_diagonal_covariance (end)
+\renewcommand{\dateTaken}{April  4, 2013}
+\daysep
+\subsection{Exam 2 Debriefing} % (fold)
+\label{sub:exam_2_debriefing}
+The first problem could be done with a simple beta binomial conjugate prior model.
+
+You can't add an error term where you have only a single observation per subject.
+
+To make it random, go back to the basic beta-binomial and then put priors and alpha and beta.
+
+When you say $b_{i}+e_{i}$, and $e_{i}\sim \normd(0,\sigma^{2})$ is a noise term, we say that it is centered at 0, because it shouldn't be biased.
+% subsection exam_2_debriefing (end)
 \end{document}
