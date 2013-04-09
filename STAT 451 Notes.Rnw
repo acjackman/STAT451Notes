@@ -760,7 +760,7 @@ model {
 
     for (i in 1:2) {
         for (j in 1:3) {
-            mu[i,j] ~ dnorm(0, .000001)
+            mu[i, j] ~ dnorm(0, .000001)
         }
     }
 
@@ -2203,4 +2203,135 @@ To make it random, go back to the basic beta-binomial and then put priors and al
 
 When you say $b_{i}+e_{i}$, and $e_{i}\sim \normd(0,\sigma^{2})$ is a noise term, we say that it is centered at 0, because it shouldn't be biased.
 % subsection exam_2_debriefing (end)
+\section{section name} % (fold)
+\label{sec:section_name}
+Auto Regressive (AR(1)) covariance structure for a single person:
+\begin{align*}
+V(\vect{y}_{i})=\sigma^{2}\begin{pmatrix}
+    1        & \rho     & \rho^{2} & \rho^{3} & \rho^{4} & \rho^{5} & \rho^{6}\\
+    \rho     & 1        & \rho     & \rho^{2} & \rho^{3} & \rho^{4} & \rho^{5}\\
+    \rho^{2} & \rho     & 1        & \rho     & \rho^{2} & \rho^{3} & \rho^{4}\\
+    \rho^{3} & \rho^{2} & \rho     & 1        & \rho     & \rho^{2} & \rho^{3}\\
+    \rho^{4} & \rho^{3} & \rho^{2} & \rho     & 1        & \rho     & \rho^{2}\\
+    \rho^{5} & \rho^{4} & \rho^{3} & \rho^{2} & \rho     & 1        & \rho    \\
+    \rho^{6} & \rho^{5} & \rho^{4} & \rho^{3} & \rho^{2} & \rho     & 1       \\
+\end{pmatrix}
+\end{align*}
+
+With this multivariate correlation structure, we have a multivariate normal distribution
+
+Multivariate Normal PDF
+% \begin{align*}
+%     f(\vect{y})=(2\pi)^{-\frac{n}{2}}|\vect{V}|^{-\frac{1}{2}}\exp\left(-\frac{1}{2}(\vect{y}-\vect{\mu})' V^{-1} (\vect{y}-\vect{\mu}\right)
+% \end{align*}
+
+% So our likelihood is
+% \begin{align*}
+%     f(\vect{y})&= \prod_{i=1}^{7} \frac{1}{\sqrt{2\pi}\sqrt{\sigma^{2}}} \exp(-\frac{1}{2\sqrt^{2}}(y_{i}-\mu)^{2})\\
+%     &=(2\pi)^{-\frac{7}{2}}(\sigma^{2})^{-\frac{7}{2}} \exp\left(\sum_{i=1}^{n} -\frac{1}{2\sigma^{2}}(y_{i}-\mu)^{2}\right)
+% \end{align*}
+
+\begin{align*}
+V=\begin{pmatrix}
+    \sigma^{2} & 0 & 0 & 0      & 0\\
+    0 & \sigma^{2} & 0 & 0      & 0\\
+    0 & 0 & \sigma^{2} & 0      & 0\\
+    0 & 0 & 0          & \ddots & 0\\
+    0 & 0 & 0          &      0 & \sigma^{2}\\
+\end{pmatrix}\\
+(\vect{y}-\vect{\mu}) =
+\begin{pmatrix}
+    y_{1} -\mu\\
+    y_{2} -\mu\\
+    \vdots\\
+    y_{7} -\mu\\
+\end{pmatrix}\\
+\end{align*}
+
+\begin{align*}
+    \begin{pmatrix}
+    y_{1} -\mu &
+    y_{2} -\mu &
+    \ldots &
+    y_{7} -\mu &
+\end{pmatrix}
+\begin{pmatrix}
+    \frac{1}{\sigma^{2}} & 0 & 0 & 0      & 0\\
+    0 & \frac{1}{\sigma^{2}} & 0 & 0      & 0\\
+    0 & 0 & \frac{1}{\sigma^{2}} & 0      & 0\\
+    0 & 0 & 0          & \ddots & 0\\
+    0 & 0 & 0          &      0 & \frac{1}{\sigma^{2}}\\
+\end{pmatrix}
+\begin{pmatrix}
+    y_{1} -\mu\\
+    y_{2} -\mu\\
+    \vdots\\
+    y_{7} -\mu\\
+\end{pmatrix}\\
+% \begin{pmatrix}
+%     \frac{y_{1}-\mu}{\sigma^{2}} & \frac{y_{2}-\mu}{\sigma^{2}} & \ldots & \frac{y_{7}-\mu}{\sigma^{2}}\\
+% \end{pmatrix}\\
+%     \frac{y_{1}-\mu}{\sigma^{2}} + \frac{y_{2}-\mu}{\sigma^{2}} + \ldots + \frac{y_{7}-\mu}{\sigma^{2}}\\
+\end{align*}
+
+\begin{align*}
+    \vect{y}_{i}&\sim \text{MVN}(\vect{\mu}_{i}, \vect{V})\\
+    \mu_{ij} &= \beta_{0~{\tiny\text{tmt}}} + \beta_{1~{\tiny\text{tmt}}} * t_{i}\\
+    \beta_{0} &- \normd(85, 1000)\\
+    \beta_{1} &- \normd(0, 100)\\
+    \rho &- \betad(1, 1)\\
+    \sigma^{2} ~ \gammad(1.1, 0.1)\\
+\end{align*}
+
+<<MVNModel, tidy=FALSE>>=
+mdl <- 'model{
+    for (i in 1:57) {
+        y[i, 1:7] ~ dmnorm(mu[i, 1:7], tau[1:7,1:7]);
+        for (j in 1:7) {
+            mu[i, j] <- b0[tmt[i, j]] + b1[tmt[i, j]]*tz[i, j]
+        }
+    }
+
+    for (i in 1:3){
+        b0[i] ~ dnorm(70, .001);
+        b1[i] ~ dnorm(0, 001);
+    }
+
+    rho ~ dbeta(1,1);
+    s2err ~ dunif(0,50);
+
+    for(i in 1:7){
+        for( j in 1:7){
+            vv[i, j] <- s2err*rho^(abs(i-j));
+        }
+    }
+    tau[1:7, 1:7] <- inverse(vv[1:7, 1:7])
+}
+'
+writeLines(mdl, 'code/MultivariateNormal.jags')
+@
+<<MVNSim, dependson=c('WeightData','MVNModel'), cache=TRUE>>=
+# Straight R
+y <- matrix(weight[order(weight$subj),]$response, 57, 7, byrow=TRUE)
+# Reshape
+library(reshape2)
+y <- acast(weight[,c('subj','time','response')], subj~time, value.var='response')
+tz <- acast(weight[,c('subj','time','tz')], subj~time, value.var='tz')
+tmt <- acast(weight[,c('subj','time','tmt')], subj~time, value.var='tmt')
+jags.data <- c('y','tz','tmt')
+jags.params <- c('b0', 'b1', 's2err','rho')
+innit <- function() {
+    list('b0'=rep(70,3),'b1'=rep(0,3),'s2err'=runif(1,0,50),'rho'=runif(1,0,1))
+}
+ar1.jags <- jags(data=jags.data,
+                 parameters.to.save=jags.params,
+                 inits=innit,
+                 model.file='code/MultivariateNormal.jags',
+                 n.iter=12000, n.burnin=2000,
+                 n.chains=1, n.thin=1)
+@
+<<dependson=c('MVNSim')>>=
+ar1.jags
+@
+% section section_name (end)
 \end{document}

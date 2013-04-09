@@ -1,0 +1,24 @@
+model{
+    for (i in 1:57) {
+        y[i, 1:7] ~ dmnorm(mu[i, 1:7], tau[1:7,1:7]);
+        for (j in 1:7) {
+            mu[i, j] <- b0[tmt[i, j]] + b1[tmt[i, j]]*tz[i, j]
+        }
+    }
+
+    for (i in 1:3){
+        b0[i] ~ dnorm(70, .001);
+        b1[i] ~ dnorm(0, 001);
+    }
+
+    rho ~ dbeta(1,1);
+    s2err ~ dunif(0,50);
+
+    for(i in 1:7){
+        for( j in 1:7){
+            vv[i, j] <- s2err*rho^(abs(i-j));
+        }
+    }
+    tau[1:7, 1:7] <- inverse(vv[1:7, 1:7])
+}
+

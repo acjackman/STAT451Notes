@@ -1254,7 +1254,7 @@ model \{
 
     \hlfunctioncall{for} (i in 1:2) \{
         \hlfunctioncall{for} (j in 1:3) \{
-            mu[i,j] ~ \hlfunctioncall{dnorm}(0, .000001)
+            mu[i, j] ~ \hlfunctioncall{dnorm}(0, .000001)
         \}
     \}
 
@@ -1282,7 +1282,7 @@ cult1.jags <- \hlfunctioncall{jags}( data=jags.data,
 \end{alltt}
 
 
-{\ttfamily\noindent\itshape\textcolor{messagecolor}{\#\# module glm loaded}}\begin{verbatim}
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# module glm loaded}}\begin{verbatim}
 ## Compiling model graph
 ##    Resolving undeclared variables
 ##    Allocating nodes
@@ -3641,4 +3641,175 @@ To make it random, go back to the basic beta-binomial and then put priors and al
 
 When you say $b_{i}+e_{i}$, and $e_{i}\sim \normd(0,\sigma^{2})$ is a noise term, we say that it is centered at 0, because it shouldn't be biased.
 % subsection exam_2_debriefing (end)
+\section{section name} % (fold)
+\label{sec:section_name}
+Auto Regressive (AR(1)) covariance structure for a single person:
+\begin{align*}
+V(\vect{y}_{i})=\sigma^{2}\begin{pmatrix}
+    1        & \rho     & \rho^{2} & \rho^{3} & \rho^{4} & \rho^{5} & \rho^{6}\\
+    \rho     & 1        & \rho     & \rho^{2} & \rho^{3} & \rho^{4} & \rho^{5}\\
+    \rho^{2} & \rho     & 1        & \rho     & \rho^{2} & \rho^{3} & \rho^{4}\\
+    \rho^{3} & \rho^{2} & \rho     & 1        & \rho     & \rho^{2} & \rho^{3}\\
+    \rho^{4} & \rho^{3} & \rho^{2} & \rho     & 1        & \rho     & \rho^{2}\\
+    \rho^{5} & \rho^{4} & \rho^{3} & \rho^{2} & \rho     & 1        & \rho    \\
+    \rho^{6} & \rho^{5} & \rho^{4} & \rho^{3} & \rho^{2} & \rho     & 1       \\
+\end{pmatrix}
+\end{align*}
+
+With this multivariate correlation structure, we have a multivariate normal distribution
+
+Multivariate Normal PDF
+% \begin{align*}
+%     f(\vect{y})=(2\pi)^{-\frac{n}{2}}|\vect{V}|^{-\frac{1}{2}}\exp\left(-\frac{1}{2}(\vect{y}-\vect{\mu})' V^{-1} (\vect{y}-\vect{\mu}\right)
+% \end{align*}
+
+% So our likelihood is
+% \begin{align*}
+%     f(\vect{y})&= \prod_{i=1}^{7} \frac{1}{\sqrt{2\pi}\sqrt{\sigma^{2}}} \exp(-\frac{1}{2\sqrt^{2}}(y_{i}-\mu)^{2})\\
+%     &=(2\pi)^{-\frac{7}{2}}(\sigma^{2})^{-\frac{7}{2}} \exp\left(\sum_{i=1}^{n} -\frac{1}{2\sigma^{2}}(y_{i}-\mu)^{2}\right)
+% \end{align*}
+
+\begin{align*}
+V=\begin{pmatrix}
+    \sigma^{2} & 0 & 0 & 0      & 0\\
+    0 & \sigma^{2} & 0 & 0      & 0\\
+    0 & 0 & \sigma^{2} & 0      & 0\\
+    0 & 0 & 0          & \ddots & 0\\
+    0 & 0 & 0          &      0 & \sigma^{2}\\
+\end{pmatrix}\\
+(\vect{y}-\vect{\mu}) =
+\begin{pmatrix}
+    y_{1} -\mu\\
+    y_{2} -\mu\\
+    \vdots\\
+    y_{7} -\mu\\
+\end{pmatrix}\\
+\end{align*}
+
+\begin{align*}
+    \begin{pmatrix}
+    y_{1} -\mu &
+    y_{2} -\mu &
+    \ldots &
+    y_{7} -\mu &
+\end{pmatrix}
+\begin{pmatrix}
+    \frac{1}{\sigma^{2}} & 0 & 0 & 0      & 0\\
+    0 & \frac{1}{\sigma^{2}} & 0 & 0      & 0\\
+    0 & 0 & \frac{1}{\sigma^{2}} & 0      & 0\\
+    0 & 0 & 0          & \ddots & 0\\
+    0 & 0 & 0          &      0 & \frac{1}{\sigma^{2}}\\
+\end{pmatrix}
+\begin{pmatrix}
+    y_{1} -\mu\\
+    y_{2} -\mu\\
+    \vdots\\
+    y_{7} -\mu\\
+\end{pmatrix}\\
+% \begin{pmatrix}
+%     \frac{y_{1}-\mu}{\sigma^{2}} & \frac{y_{2}-\mu}{\sigma^{2}} & \ldots & \frac{y_{7}-\mu}{\sigma^{2}}\\
+% \end{pmatrix}\\
+%     \frac{y_{1}-\mu}{\sigma^{2}} + \frac{y_{2}-\mu}{\sigma^{2}} + \ldots + \frac{y_{7}-\mu}{\sigma^{2}}\\
+\end{align*}
+
+\begin{align*}
+    \vect{y}_{i}&\sim \text{MVN}(\vect{\mu}_{i}, \vect{V})\\
+    \mu_{ij} &= \beta_{0~{\tiny\text{tmt}}} + \beta_{1~{\tiny\text{tmt}}} * t_{i}\\
+    \beta_{0} &- \normd(85, 1000)\\
+    \beta_{1} &- \normd(0, 100)\\
+    \rho &- \betad(1, 1)\\
+    \sigma^{2} ~ \gammad(1.1, 0.1)\\
+\end{align*}
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+mdl <- 'model\{
+    \hlfunctioncall{for} (i in 1:57) \{
+        y[i, 1:7] ~ \hlfunctioncall{dmnorm}(mu[i, 1:7], tau[1:7,1:7]);
+        \hlfunctioncall{for} (j in 1:7) \{
+            mu[i, j] <- b0[tmt[i, j]] + b1[tmt[i, j]]*tz[i, j]
+        \}
+    \}
+
+    \hlfunctioncall{for} (i in 1:3)\{
+        b0[i] ~ \hlfunctioncall{dnorm}(70, .001);
+        b1[i] ~ \hlfunctioncall{dnorm}(0, 001);
+    \}
+
+    rho ~ \hlfunctioncall{dbeta}(1,1);
+    s2err ~ \hlfunctioncall{dunif}(0,50);
+
+    \hlfunctioncall{for}(i in 1:7)\{
+        \hlfunctioncall{for}( j in 1:7)\{
+            vv[i, j] <- s2err*rho^(\hlfunctioncall{abs}(i-j));
+        \}
+    \}
+    tau[1:7, 1:7] <- \hlfunctioncall{inverse}(vv[1:7, 1:7])
+\}
+'
+\hlfunctioncall{writeLines}(mdl, \hlstring{'code/MultivariateNormal.jags'})
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcomment{# Straight R}
+y <- \hlfunctioncall{matrix}(weight[\hlfunctioncall{order}(weight$subj), ]$response, 57, 7, byrow = TRUE)
+\hlcomment{# Reshape}
+\hlfunctioncall{library}(reshape2)
+y <- \hlfunctioncall{acast}(weight[, \hlfunctioncall{c}(\hlstring{"subj"}, \hlstring{"time"}, \hlstring{"response"})], subj ~ time, value.var = \hlstring{"response"})
+tz <- \hlfunctioncall{acast}(weight[, \hlfunctioncall{c}(\hlstring{"subj"}, \hlstring{"time"}, \hlstring{"tz"})], subj ~ time, value.var = \hlstring{"tz"})
+tmt <- \hlfunctioncall{acast}(weight[, \hlfunctioncall{c}(\hlstring{"subj"}, \hlstring{"time"}, \hlstring{"tmt"})], subj ~ time, value.var = \hlstring{"tmt"})
+jags.data <- \hlfunctioncall{c}(\hlstring{"y"}, \hlstring{"tz"}, \hlstring{"tmt"})
+jags.params <- \hlfunctioncall{c}(\hlstring{"b0"}, \hlstring{"b1"}, \hlstring{"s2err"}, \hlstring{"rho"})
+innit <- \hlfunctioncall{function}() \{
+    \hlfunctioncall{list}(b0 = \hlfunctioncall{rep}(70, 3), b1 = \hlfunctioncall{rep}(0, 3), s2err = \hlfunctioncall{runif}(1, 0, 50), rho = \hlfunctioncall{runif}(1, 
+        0, 1))
+\}
+ar1.jags <- \hlfunctioncall{jags}(data = jags.data, parameters.to.save = jags.params, inits = innit, 
+    model.file = \hlstring{"code/MultivariateNormal.jags"}, n.iter = 12000, n.burnin = 2000, 
+    n.chains = 1, n.thin = 1)
+\end{alltt}
+\begin{verbatim}
+## Compiling model graph
+##    Resolving undeclared variables
+##    Allocating nodes
+##    Graph Size: 1051
+## 
+## Initializing model
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+ar1.jags
+\end{alltt}
+\begin{verbatim}
+## Inference for Bugs model at "code/MultivariateNormal.jags", fit using jags,
+##  1 chains, each with 12000 iterations (first 2000 discarded)
+##  n.sims = 10000 iterations saved
+##          mu.vect sd.vect    2.5%     25%     50%     75%   97.5%
+## b0[1]     79.750   0.746  78.318  79.251  79.749  80.251  81.215
+## b0[2]     79.748   0.832  78.126  79.192  79.758  80.311  81.360
+## b0[3]     81.074   0.730  79.601  80.589  81.079  81.569  82.510
+## b1[1]     -0.024   0.088  -0.197  -0.082  -0.024   0.035   0.150
+## b1[2]      0.237   0.099   0.044   0.171   0.238   0.304   0.430
+## b1[3]      0.338   0.086   0.169   0.279   0.337   0.397   0.504
+## rho        0.951   0.009   0.933   0.946   0.952   0.958   0.967
+## s2err     11.192   1.974   7.973   9.792  10.994  12.344  15.661
+## deviance 543.302   4.037 537.353 540.373 542.653 545.541 552.814
+## 
+## DIC info (using the rule, pD = var(deviance)/2)
+## pD = 8.1 and DIC = 551.4
+## DIC is an estimate of expected predictive error (lower deviance is better).
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+% section section_name (end)
 \end{document}
