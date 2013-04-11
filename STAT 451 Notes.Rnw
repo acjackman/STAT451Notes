@@ -2334,4 +2334,84 @@ ar1.jags <- jags(data=jags.data,
 ar1.jags
 @
 % section section_name (end)
+\renewcommand{\dateTaken}{April 11, 2013}
+\daysep
+\section{Censored Data} % (fold)
+\label{sec:censored_data}
+Mice Survival data
+
+Time is time to death
+
+Right censoring happens if you can't record data
+
+Left censoring happens if you start recording data on someone after your main data
+
+Frequentest do this:
+\begin{tabular}{l r}
+ Left Censored & CDF \\
+ Known Data & likelihood \\
+ Right Censored & SDF \\
+\end{tabular}
+
+to do this we need to write our own likelihood.
+\lstinputlisting[language=SAS]{code/Censored.sas}
+SAS Needs zeros for censored times
+
+<<>>=
+mice <- read.table('data/micesurvival.dat', header=TRUE)
+### JAGS uses an indicator variable that is 1 if censored and 0 if not
+mice$isCensored <- ifelse(is.na(mice$time), 1, 0)
+
+mice$timecen <- ifelse(is.na(mice$time), NA, mice$time)
+
+
+### JAGS expects the outcome to be missing if censored
+### recode tiem so that if it is censored, it has a missing value
+mice$cenLimit <- ifelse(is.na(mice$time), mice$censored, 40)
+@
+<<tidy=FALSE>>=
+# Model Statement
+model <- 'model {
+    for (i in 1:n){
+        isCensored[i] ~ dinterval(time[i], cenLimit[i]);
+        time[i] ~ dgamma(r, test[tmt[i]])
+    }
+    r ~ dgamma(1.5, .25)
+    for (j in 1:numtx) {
+        mu[j] ~ dgamma(1.5, .33)
+        test[j] <- 1/mu[j]
+    }
+}
+'
+writeLines(model, 'code/Censored.jags')
+@
+<<>>=
+### Cosolidating the Data to pass from R to JAGS
+n <- length(mice$time)
+isCensored <- mice$isCensored
+time <- mice$timecen
+cenLimit <- mice$cenLimit
+numtx <- max(mice$tmt)
+tmt <- mice$tmt
+
+### named list of data
+jags.data <- list(n=n, isCensored=isCensored, time=time, cenLimit=cenLimit, tmt=tmt, numtx=numtx)
+
+### The time variable has missing values and it needs initialized values for the missing data
+### I'm setting the initial value to the observed value if no censoring
+timeInit <- ifelse(is.na(time), 42, NA)
+
+innts <- list(list(time=timeInit, r=rgamma(1, shape=1.5, rate=.25), mu=rgamma(numtx, shape=1.55, rate=.33)))
+
+### Parms to monitor
+parms <- c('mu', 'r')
+
+survcen1.sim <- jags(data=jags.data, inits=innts, parameters.to.save=parms,
+                     model.file='code/Censored.jags',
+                     n.iter= 12000, n.burnin=2000, n.chains=1, n.thin=1)
+
+@
+
+WinBUGS code is will probably not give the correct answers, verify with SAS
+% section censored_data (end)
 \end{document}

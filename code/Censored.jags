@@ -1,0 +1,12 @@
+model {
+    for (i in 1:n){
+        isCensored[i] ~ dinterval(time[i], cenLimit[i]);
+        time[i] ~ dgamma(r, test[tmt[i]])
+    }
+    r ~ dgamma(1.5, .25)
+    for (j in 1:numtx) {
+        mu[j] ~ dgamma(1.5, .33)
+        test[j] <- 1/mu[j]
+    }
+}
+
